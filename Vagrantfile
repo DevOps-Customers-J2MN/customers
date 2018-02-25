@@ -96,7 +96,6 @@ Vagrant.configure("2") do |config|
     # Install app dependencies
     cd /vagrant
     sudo pip install -r requirements.txt
-	sudo apt-get install pylint
     # Make vi look nice
     sudo -u ubuntu echo "colorscheme desert" > ~/.vimrc
 

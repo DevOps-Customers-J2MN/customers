@@ -15,14 +15,26 @@ import os
 import sys
 import logging
 from flask import Flask, Response, jsonify, request, json, url_for, make_response
+from flask_api import status    # HTTP Status Codes
+from werkzeug.exceptions import NotFound
+
+from flask_sqlalchemy import SQLAlchemy
+
 from models import Customer, DataValidationError
+
+# Create Flask application
+app = Flask(__name__)
+
+# We'll just use SQLite here so we don't need an external database
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db/development.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SECRET_KEY'] = 'secret key'
+app.config['LOGGING_LEVEL'] = logging.INFO
 
 # Pull options from environment
 DEBUG = (os.getenv('DEBUG', 'False') == 'True')
 PORT = os.getenv('PORT', '5000')
 
-# Create Flask application
-app = Flask(__name__)
 
 # Status Codes
 HTTP_200_OK = 200
@@ -56,6 +68,13 @@ def method_not_supported(error):
     return jsonify(status=405, error='Method not Allowed',
                    message='Your request method is not supported.' \
                    ' Check your HTTP method and try again.'), 405
+
+@app.errorhandler(415)
+def mediatype_not_supported(error):
+    """ Handles unsuppoted media requests with 415_UNSUPPORTED_MEDIA_TYPE """
+    message = error.message or str(error)
+    app.logger.info(message)
+    return jsonify(status=415, error='Unsupported media type', message=message), 415
 
 @app.errorhandler(500)
 def internal_server_error(error):
@@ -119,6 +138,20 @@ def create_customers():
 ######################################################################
 #   U T I L I T Y   F U N C T I O N S
 ######################################################################
+def init_db():
+    "Initialies the SQLAlchemy app"
+    global app
+    Customer.init_db(app)
+
+
+def check_content_type(content_type):
+    "Checks that the medis type is correct"
+    if request.headers['Content-Type'] == content_type:
+        return
+    app.logger.error('Invalid Content-Type: %s', request.headers['Content-Type'])
+    abort(415, 'Content-Type must be {}'.format(content_type))
+
+
 def initialize_logging(log_level=logging.INFO):
     """ Initialized the default logging to STDOUT """
     if not app.debug:
@@ -148,7 +181,11 @@ if __name__ == "__main__":
     print " C U S T O M E R  S E R V I C E "
     print "*********************************"
     initialize_logging()
-    # dummy data for testing
-    Customer(0, 'Meenakshi Sundaram', 'Sundaram, 'Jersey City', '2016604601, 'msa503@nyu.edu', '123456').save()
-    app.run(host='0.0.0.0', port=int(PORT), debug=DEBUG)
+    # make sqlalchemy tables
+    init_db()
 
+    # dummy data for testing
+    Customer(username='Meenakshi Sundaram', password='123', firstname='Meenakshi', lastname='Sundaram',
+             address='Jersey City', phone='2016604601', email='msa503@nyu.edu', status=1).save()
+
+    app.run(host='0.0.0.0', port=int(PORT), debug=DEBUG)

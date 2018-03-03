@@ -57,6 +57,10 @@ Vagrant.configure("2") do |config|
     # Customize the amount of memory on the VM:
     vb.memory = "512"
     vb.cpus = 1
+
+    # Fixes some DNS issues on some networks
+    vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+    vb.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
   end
   #
   # View the documentation for the provider you are using for more
@@ -76,6 +80,10 @@ Vagrant.configure("2") do |config|
     config.vm.provision "file", source: "~/.ssh/id_rsa.pub", destination: "~/.ssh/id_rsa.pub"
   end
 
+  # Change the permission of files and directories
+  # so that nosetests runs without extra arguments.
+  config.vm.synced_folder ".", "/vagrant", mount_options: ["dmode=775,fmode=664"]
+
   # Enable provisioning with a shell script. Additional provisioners such as
   # Puppet, Chef, Ansible, Salt, and Docker are also available. Please see the
   # documentation for more information about their specific syntax and use.
@@ -90,15 +98,16 @@ Vagrant.configure("2") do |config|
   # Setup a Python development environment
   config.vm.provision "shell", inline: <<-SHELL
     sudo apt-get update
-    sudo apt-get install -y git python-pip python-dev
+    sudo apt-get install -y git python-pip python-dev build-essential
     pip install --upgrade pip
     sudo apt-get -y autoremove
-    # Install app dependencies
-    cd /vagrant
-    sudo pip install -r requirements.txt
+
     # Make vi look nice
     sudo -u ubuntu echo "colorscheme desert" > ~/.vimrc
 
+    # Install app dependencies
+    cd /vagrant
+    sudo pip install -r requirements.txt
   SHELL
 
 end

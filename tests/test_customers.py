@@ -210,6 +210,7 @@ class TestPets(unittest.TestCase):
                              status=0)
         customer2.save()
 
+        customers = Customer.all()
         thecustomer = Customer.find(customer2.id)
 
         self.assertIsNot(thecustomer, None)

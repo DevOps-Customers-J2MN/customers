@@ -5,10 +5,11 @@ It demonstraits how a RESTful service should be implemented.
 Paths
 -----
 GET  /customers - Retrieves a list of Customer from the database
-GET  /customers{id} - Retrirves a Customer with a specific id
+GET  /customers/{id} - Retrieves a Customer with a specific id
+GET  /customers/{username} - Retrieves a Customer by username
 POST /customers - Creates a Customer in the datbase from the posted database
 PUT  /customers/{id} - Updates a Customer in the database fom the posted database
-DELETE /customers{id} - Removes a Customer from the database that matches the id
+DELETE /customers/{id} - Removes a Customer from the database that matches the id
 """
 
 import os
@@ -104,7 +105,7 @@ def list_customers():
     return jsonify([customer.serialize() for customer in results]), HTTP_200_OK
 
 ######################################################################
-# RETRIEVE A CUSTOMER
+# RETRIEVE A CUSTOMER By ID
 ######################################################################
 @app.route('/customers/<int:id>', methods=['GET'])
 def get_customers(id):
@@ -115,6 +116,23 @@ def get_customers(id):
         return_code = HTTP_200_OK
     else:
         message = {'error' : 'Customer with id: %s was not found' % str(id)}
+        return_code = HTTP_404_NOT_FOUND
+
+    return jsonify(message), return_code
+
+######################################################################
+# RETRIEVE A CUSTOMER By Username
+######################################################################
+@app.route('/customers/<username>', methods=['GET'])
+def get_customer_by_username(username):
+    """ Retrieve a Customer with a specific username"""
+    customer = Customer.find_by_username(username).first()
+    if customer:
+        print 'return customer'
+        message = customer.serialize()
+        return_code = HTTP_200_OK
+    else:
+        message = {'error': 'Customer with username: %s was not found' % username}
         return_code = HTTP_404_NOT_FOUND
 
     return jsonify(message), return_code
@@ -214,7 +232,14 @@ if __name__ == "__main__":
     init_db()
 
     # dummy data for testing
-    Customer(username='Meenakshi Sundaram', password='123', firstname='Meenakshi', lastname='Sundaram',
-             address='Jersey City', phone='2016604601', email='msa503@nyu.edu', status=1).save()
+    Customer(username='Meenakshi Sundaram', password='123',
+             firstname='Meenakshi', lastname='Sundaram',
+             address='Jersey City', phone='2016604601',
+             email='msa503@nyu.edu', status=1).save()
+
+    Customer(username='jf', password='12345',
+             firstname='jinfan', lastname='yang',
+             address='nyu', phone='123-456-7890',
+             email='jy2296@nyu.edu', status=1).save()
 
     app.run(host='0.0.0.0', port=int(PORT), debug=DEBUG)

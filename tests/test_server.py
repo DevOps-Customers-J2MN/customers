@@ -88,51 +88,71 @@ class TestCustomerServer(unittest.TestCase):
         resp = self.app.get('/customers/0')
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
-    # def test_create_pet(self):
-    #     """ Create a new Pet """
-    #     # save the current number of pets for later comparison
-    #     pet_count = self.get_pet_count()
-    #     # add a new pet
-    #     new_pet = {'name': 'sammy', 'category': 'snake', 'available': 'True'}
-    #     data = json.dumps(new_pet)
-    #     resp = self.app.post('/pets', data=data, content_type='application/json')
-    #     self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
-    #     # Make sure location header is set
-    #     location = resp.headers.get('Location', None)
-    #     self.assertTrue(location != None)
-    #     # Check the data is correct
-    #     new_json = json.loads(resp.data)
-    #     self.assertEqual(new_json['name'], 'sammy')
-    #     # check that count has gone up and includes sammy
-    #     resp = self.app.get('/pets')
-    #     # print 'resp_data(2): ' + resp.data
-    #     data = json.loads(resp.data)
-    #     self.assertEqual(resp.status_code, status.HTTP_200_OK)
-    #     self.assertEqual(len(data), pet_count + 1)
-    #     self.assertIn(new_json, data)
-    #
-    # def test_update_pet(self):
-    #     """ Update an existing Pet """
-    #     pet = Pet.find_by_name('kitty')[0]
-    #     new_kitty = {'name': 'kitty', 'category': 'tabby', 'available': 'True'}
-    #     data = json.dumps(new_kitty)
-    #     resp = self.app.put('/pets/{}'.format(pet.id), data=data, content_type='application/json')
-    #     self.assertEqual(resp.status_code, status.HTTP_200_OK)
-    #     new_json = json.loads(resp.data)
-    #     self.assertEqual(new_json['category'], 'tabby')
-    #
-    # def test_delete_pet(self):
-    #     """ Delete a Pet """
-    #     pet = Pet.find_by_name('fido')[0]
-    #     # save the current number of pets for later comparrison
-    #     pet_count = self.get_pet_count()
-    #     resp = self.app.delete('/pets/{}'.format(pet.id),
-    #                            content_type='application/json')
-    #     self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
-    #     self.assertEqual(len(resp.data), 0)
-    #     new_count = self.get_pet_count()
-    #     self.assertEqual(new_count, pet_count - 1)
-    #
+    def test_create_customer(self):
+        """ Create a new Customer """
+        # save the current number of customers for later comparison
+        customer_count = self.get_customer_count()
+
+        # add a new customer
+        new_customer = {"username": "ms",
+                        "password": "11111",
+                        "firstname": "mary",
+                        "lastname": "sue",
+                        "address": "nyu",
+                        "phone": "123-456-7890",
+                        "email": "marysue@gmail.com",
+                        "status": 0}
+
+        data = json.dumps(new_customer)
+        resp = self.app.post('/customers', data=data, content_type='application/json')
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        # Make sure location header is set
+        location = resp.headers.get('Location', None)
+        self.assertTrue(location != None)
+
+        # Check the data is correct
+        new_json = json.loads(resp.data)
+        self.assertEqual(new_json['username'], 'ms')
+
+        # check that count has gone up
+        resp = self.app.get('/customers')
+        data = json.loads(resp.data)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(data), customer_count + 1)
+        self.assertIn(new_json, data)
+
+    def test_update_customer(self):
+        """ Update an existing Customer """
+        customer = Customer.find_by_username('jf')[0]
+        new_customer = {"username": "jf",
+                        "password": "12345",
+                        "firstname": "jinfan",
+                        "lastname": "yang",
+                        "address": "nyu",
+                        "phone": "123-456-7890",
+                        "email": "jy2296@nyu.edu",
+                        "status": 0}
+
+        data = json.dumps(new_customer)
+        resp = self.app.put('/customers/{}'.format(customer.id), data=data, content_type='application/json')
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        new_json = json.loads(resp.data)
+        self.assertEqual(new_json['status'], 0)
+
+    def test_delete_customer(self):
+        """ Delete a Customer """
+        customer = Customer.find_by_username('jf')[0]
+
+        # save the current number of pets for later comparrison
+        customer_count = self.get_customer_count()
+        resp = self.app.delete('/customers/{}'.format(customer.id),
+                               content_type='application/json')
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(len(resp.data), 0)
+        new_count = self.get_customer_count()
+        self.assertEqual(new_count, customer_count - 1)
+
     # def test_query_pet_list_by_category(self):
     #     """ Query Pets by Category """
     #     resp = self.app.get('/pets', query_string='category=dog')
@@ -150,20 +170,20 @@ class TestCustomerServer(unittest.TestCase):
     #     bad_request_mock.side_effect = DataValidationError()
     #     resp = self.app.get('/pets', query_string='name=fido')
     #     self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-    #
-    # @patch('server.Pet.find_by_name')
-    # def test_mock_search_data(self, pet_find_mock):
-    #     """ Test showing how to mock data """
-    #     pet_find_mock.return_value = [MagicMock(serialize=lambda: {'name': 'fido'})]
-    #     resp = self.app.get('/pets', query_string='name=fido')
-    #     self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+    @patch('server.Customer.find_by_username')
+    def test_mock_search_data(self, username_find_mock):
+        """ Test showing how to mock data """
+        username_find_mock.return_value = [MagicMock(serialize=lambda: {'username': 'jf'})]
+        resp = self.app.get('/customers', query_string='username=jf')
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
 
 ######################################################################
 # Utility functions
 ######################################################################
 
-    def get_customers_count(self):
+    def get_customer_count(self):
         """ save the current number of customers """
         resp = self.app.get('/customers')
         self.assertEqual(resp.status_code, status.HTTP_200_OK)

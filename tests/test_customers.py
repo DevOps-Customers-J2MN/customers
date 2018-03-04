@@ -80,7 +80,7 @@ class TestPets(unittest.TestCase):
         self.assertEqual(customer.id, None)
 
         # Save this customer into database
-        pet.save()
+        customer.save()
 
         # Asert that it was assigned an id and shows up in the database
         self.assertEqual(customer.id, 1)
@@ -170,8 +170,8 @@ class TestPets(unittest.TestCase):
                 "firstname": "jinfan",
                 "lastname": "yang",
                 "address": "nyu",
-                "phone": "123-456-7890"
-                "email": "jy2296@nyu.edu"
+                "phone": "123-456-7890",
+                "email": "jy2296@nyu.edu",
                 "status": 1}
 
         customer = Customer()
@@ -211,6 +211,7 @@ class TestPets(unittest.TestCase):
         customer2.save()
 
         thecustomer = Customer.find(customer2.id)
+
         self.assertIsNot(thecustomer, None)
         self.assertEqual(thecustomer.id, customer2.id)
         self.assertEqual(thecustomer.username, "ms")

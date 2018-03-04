@@ -10,6 +10,7 @@ GET  /customers/{username} - Retrieves a Customer by username
 POST /customers - Creates a Customer in the datbase from the posted database
 PUT  /customers/{id} - Updates a Customer in the database fom the posted database
 DELETE /customers/{id} - Removes a Customer from the database that matches the id
+GET /customers/{promo} - Retrieves a list of Customer with the promo from the database
 """
 
 import os
@@ -181,6 +182,17 @@ def delete_customers(id):
 
     return make_response('', status.HTTP_204_NO_CONTENT)
 
+######################################################################
+# LIST ALL CUSTOMERS WITH PROMO SUBSCRIPTION
+######################################################################
+@app.route('/customers/promo/<int:promo>', methods=['GET'])
+def list_customers_promo(promo):
+    """ Retrieves a list of customers with promo from the database """
+    results = []
+    results = Customer.find_by_promo(promo)
+
+    return jsonify([customer.serialize() for customer in results]), HTTP_200_OK
+
 
 ######################################################################
 #   U T I L I T Y   F U N C T I O N S
@@ -235,11 +247,11 @@ if __name__ == "__main__":
     Customer(username='Meenakshi Sundaram', password='123',
              firstname='Meenakshi', lastname='Sundaram',
              address='Jersey City', phone='2016604601',
-             email='msa503@nyu.edu', status=1).save()
+             email='msa503@nyu.edu', status=1, promo=1).save()
 
     Customer(username='jf', password='12345',
              firstname='jinfan', lastname='yang',
              address='nyu', phone='123-456-7890',
-             email='jy2296@nyu.edu', status=1).save()
+             email='jy2296@nyu.edu', status=1, promo=0).save()
 
     app.run(host='0.0.0.0', port=int(PORT), debug=DEBUG)

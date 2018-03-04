@@ -45,21 +45,22 @@ class Customer(db.Model):
 
     # Table Schema
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(63))
-    password = db.Column(db.String(63))
-    firstname = db.Column(db.String(63))
-    lastname = db.Column(db.String(63))
+    username = db.Column(db.String(63), nullable=False, unique=True)
+    password = db.Column(db.String(63), nullable=False)
+    firstname = db.Column(db.String(63), nullable=False)
+    lastname = db.Column(db.String(63), nullable=False)
     address = db.Column(db.String(123))
     phone = db.Column(db.String(15))
-    email = db.Column(db.String(63))
-    status = db.Column(db.Integer)
+    email = db.Column(db.String(63), nullable=False, unique=True)
+    status = db.Column(db.Integer, nullable=False)
 
     def __repr__(self):
         return '<Customer %r>' % (self.username)
 
     def save(self):
         """ Saves a Customer to the data store """
-        if not self.id:
+        customer = Customer.find_by_username(self.username)
+        if not customer:
             db.session.add(self)
         db.session.commit()
 

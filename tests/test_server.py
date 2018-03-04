@@ -66,16 +66,16 @@ class TestCustomerServer(unittest.TestCase):
         data = json.loads(resp.data)
         self.assertEqual(data['name'], 'Customer REST API Service')
 
-    def test_get_pet_list(self):
+    def test_get_customer_list(self):
         """ Get a list of Customers """
         resp = self.app.get('/customers')
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = json.loads(resp.data)
         self.assertEqual(len(data), 2)
 
-    def test_get_pet(self):
+    def test_get_customer(self):
         """ Get a single Customer """
-        # get the id of a pet
+        # get the id of a customer
         customer = Customer.find_by_username('jf')[0]
         resp = self.app.get('/customers/{}'.format(customer.id),
                             content_type='application/json')
@@ -83,7 +83,7 @@ class TestCustomerServer(unittest.TestCase):
         data = json.loads(resp.data)
         self.assertEqual(data['username'], customer.username)
 
-    def test_get_pet_not_found(self):
+    def test_get_customer_not_found(self):
         """ Get a Customer thats not found """
         resp = self.app.get('/customers/0')
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)

@@ -59,9 +59,14 @@ class Customer(db.Model):
 
     def save(self):
         """ Saves a Customer to the data store """
-        customer = Customer.find_by_username(self.username)
-        if not customer:
+        customers = Customer.all()
+        if len(customers) == 0 :
             db.session.add(self)
+        else:
+            customer = Customer.find_by_username(self.username).first()
+            if not customer:
+                db.session.add(self)
+
         db.session.commit()
 
     def delete(self):

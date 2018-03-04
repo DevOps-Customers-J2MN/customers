@@ -134,6 +134,22 @@ def create_customers():
     response.headers['Location'] = url_for('get_customers', id=customer.id, _external=True)
     return response
 
+######################################################################
+# UPDATE A CUSTOMER
+######################################################################
+@app.route('/customers/<int:id>', methods=['PUT'])
+def update_customers(id):
+    """ Updates a Customer in the datbase from the posted database """
+    customer = Customer.find(id)
+    if not customer:
+        raise exceptions.NotFound('Customer with id: {} was not found'.format(id))
+
+    payload = request.get_json()
+    customer.deserialize(payload)
+    customer.id = id
+    customer.save()
+    return jsonify(customer.serialize()), status.HTTP_200_OK
+
 
 ######################################################################
 #   U T I L I T Y   F U N C T I O N S

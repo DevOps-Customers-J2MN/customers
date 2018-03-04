@@ -124,7 +124,7 @@ def get_customers(id):
 ######################################################################
 @app.route('/customers', methods=['POST'])
 def create_customers():
-    """ Creates a Customer in the datbase from the posted database """
+    """ Creates a Customer in the database from the posted database """
     payload = request.get_json()
     customer = Customer()
     customer.deserialize(payload)
@@ -139,7 +139,7 @@ def create_customers():
 ######################################################################
 @app.route('/customers/<int:id>', methods=['PUT'])
 def update_customers(id):
-    """ Updates a Customer in the datbase from the posted database """
+    """ Updates a Customer in the database from the posted database """
     customer = Customer.find(id)
     if not customer:
         raise exceptions.NotFound('Customer with id: {} was not found'.format(id))
@@ -149,6 +149,19 @@ def update_customers(id):
     customer.id = id
     customer.save()
     return jsonify(customer.serialize()), status.HTTP_200_OK
+
+
+######################################################################
+# DELETE A CUSTOMER
+######################################################################
+@app.route('/customers/<int:id>', methods=['DELETE'])
+def delete_customers(id):
+    """ Deletes a Customer in the database """
+    customer = Customer.find(id)
+    if customer:
+        customer.delete()
+
+    return make_response('', status.HTTP_204_NO_CONTENT)
 
 
 ######################################################################

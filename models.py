@@ -53,6 +53,7 @@ class Customer(db.Model):
     phone = db.Column(db.String(15))
     email = db.Column(db.String(63), nullable=False, unique=True)
     status = db.Column(db.Integer, nullable=False)
+    promo = db.Column(db.Integer, nullable=False)
 
     def __repr__(self):
         return '<Customer %r>' % (self.username)
@@ -84,7 +85,8 @@ class Customer(db.Model):
                 "address": self.address,
                 "phone": self.phone,
                 "email": self.email,
-                "status": self.status}
+                "status": self.status,
+                "promo": self.promo}
 
     def deserialize(self, data):
         """
@@ -104,6 +106,7 @@ class Customer(db.Model):
             self.phone = data['phone']
             self.email = data['email']
             self.status = data['status']
+            self.promo = data['promo']
         except KeyError as error:
             raise DataValidationError('Invalid customer: missing ' + error.args[0])
         except TypeError as error:
@@ -173,3 +176,15 @@ class Customer(db.Model):
         """
         Customer.logger.info('Processing status query for %s ...', status)
         return Customer.query.filter(Customer.status == status)
+
+    @staticmethod
+    def find_by_promo(promo):
+        """
+        Returns all of Customers by their promo
+
+        Args:
+            promo (int): the status of the Customers you want to match
+        """
+        Customer.logger.info('Processing promo query for %s ...', promo)
+        return Customer.query.filter(Customer.promo == promo)
+

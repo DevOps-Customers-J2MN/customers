@@ -46,12 +46,12 @@ class TestCustomerServer(unittest.TestCase):
         Customer(username='Meenakshi Sundaram', password='123',
                  firstname='Meenakshi', lastname='Sundaram',
                  address='Jersey City', phone='2016604601',
-                 email='msa503@nyu.edu', status=1).save()
+                 email='msa503@nyu.edu', status=1, promo=1).save()
 
         Customer(username='jf', password='12345',
                  firstname='jinfan', lastname='yang',
                  address='nyu', phone='123-456-7890',
-                 email='jy2296@nyu.edu', status=1).save()
+                 email='jy2296@nyu.edu', status=1, promo=0).save()
 
         self.app = server.app.test_client()
 
@@ -72,6 +72,14 @@ class TestCustomerServer(unittest.TestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = json.loads(resp.data)
         self.assertEqual(len(data), 2)
+
+    def test_get_customer_promo_list(self):
+        """ Get a list of Customers with promo"""
+        customer = Customer.find_by_promo(1)
+        resp = self.app.get('/customers/promo/1')
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = json.loads(resp.data)
+        self.assertTrue(len(data) > 0)
 
     def test_get_customer(self):
         """ Get a single Customer """
@@ -101,7 +109,8 @@ class TestCustomerServer(unittest.TestCase):
                         "address": "nyu",
                         "phone": "123-456-7890",
                         "email": "marysue@gmail.com",
-                        "status": 0}
+                        "status": 0,
+                        "promo": 1}
 
         data = json.dumps(new_customer)
         resp = self.app.post('/customers', data=data, content_type='application/json')
@@ -132,7 +141,8 @@ class TestCustomerServer(unittest.TestCase):
                         "address": "nyu",
                         "phone": "123-456-7890",
                         "email": "jy2296@nyu.edu",
-                        "status": 0}
+                        "status": 0,
+                        "promo": 1}
 
         data = json.dumps(new_customer)
         resp = self.app.put('/customers/{}'.format(customer.id), data=data, content_type='application/json')

@@ -32,10 +32,12 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'secret key'
 app.config['LOGGING_LEVEL'] = logging.INFO
 
+# Initialize SQLAlchemy
+db = SQLAlchemy(app)
+
 # Pull options from environment
 DEBUG = (os.getenv('DEBUG', 'False') == 'True')
 PORT = os.getenv('PORT', '5000')
-
 
 # Status Codes
 HTTP_200_OK = 200
@@ -242,5 +244,5 @@ if __name__ == "__main__":
     initialize_logging()
     # make sqlalchemy tables
     init_db()
-
     app.run(host='0.0.0.0', port=int(PORT), debug=DEBUG)
+

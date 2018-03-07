@@ -18,7 +18,6 @@ import sys
 import logging
 from flask import Flask, Response, jsonify, request, json, url_for, make_response
 from flask_api import status    # HTTP Status Codes
-from werkzeug.exceptions import NotFound
 
 from flask_sqlalchemy import SQLAlchemy
 
@@ -124,7 +123,7 @@ def get_customers(id):
 ######################################################################
 # RETRIEVE A CUSTOMER By Username
 ######################################################################
-@app.route('/customers/<username>', methods=['GET'])
+@app.route('/customers/username=<username>', methods=['GET'])
 def get_customer_by_username(username):
     """ Retrieve a Customer with a specific username"""
     customer = Customer.find_by_username(username).first()
@@ -160,14 +159,18 @@ def create_customers():
 def update_customers(id):
     """ Updates a Customer in the database from the posted database """
     customer = Customer.find(id)
-    if not customer:
-        raise exceptions.NotFound('Customer with id: {} was not found'.format(id))
+    if customer:
+        payload = request.get_json()
+        customer.deserialize(payload)
+        customer.id = id
+        customer.save()
+        return_code = HTTP_200_OK
+        message = customer.serialize()
+    else:
+        message = {'message': 'Customer with id: %s was not found' % str(id)}
+        return_code = HTTP_404_NOT_FOUND
 
-    payload = request.get_json()
-    customer.deserialize(payload)
-    customer.id = id
-    customer.save()
-    return jsonify(customer.serialize()), status.HTTP_200_OK
+    return jsonify(message), return_code
 
 
 ######################################################################
@@ -203,14 +206,6 @@ def init_db():
     Customer.init_db(app)
 
 
-def check_content_type(content_type):
-    "Checks that the medis type is correct"
-    if request.headers['Content-Type'] == content_type:
-        return
-    app.logger.error('Invalid Content-Type: %s', request.headers['Content-Type'])
-    abort(415, 'Content-Type must be {}'.format(content_type))
-
-
 def initialize_logging(log_level=logging.INFO):
     """ Initialized the default logging to STDOUT """
     if not app.debug:
@@ -242,16 +237,5 @@ if __name__ == "__main__":
     initialize_logging()
     # make sqlalchemy tables
     init_db()
-
-    # dummy data for testing
-    Customer(username='Meenakshi Sundaram', password='123',
-             firstname='Meenakshi', lastname='Sundaram',
-             address='Jersey City', phone='2016604601',
-             email='msa503@nyu.edu', status=1, promo=1).save()
-
-    Customer(username='jf', password='12345',
-             firstname='jinfan', lastname='yang',
-             address='nyu', phone='123-456-7890',
-             email='jy2296@nyu.edu', status=1, promo=0).save()
 
     app.run(host='0.0.0.0', port=int(PORT), debug=DEBUG)

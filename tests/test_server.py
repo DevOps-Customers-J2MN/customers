@@ -43,7 +43,7 @@ class TestCustomerServer(unittest.TestCase):
         db.drop_all()    # clean up the last tests
         db.create_all()  # create new tables
 
-        Customer(username='Meenakshi Sundaram', password='123',
+        Customer(username='MeenakshiSundaram', password='123',
                  firstname='Meenakshi', lastname='Sundaram',
                  address='Jersey City', phone='2016604601',
                  email='msa503@nyu.edu', status=1, promo=1).save()
@@ -80,6 +80,15 @@ class TestCustomerServer(unittest.TestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = json.loads(resp.data)
         self.assertTrue(len(data) > 0)
+
+    def test_get_customer_by_username(self):
+        """ Get customer by username """
+        customer = Customer.find_by_username('jf')[0]
+        resp = self.app.get('/customers/username=jf')
+        data=json.loads(resp.data)
+        self.assertEquals(data['username'],customer.username)
+        self.assertEquals(data['id'],customer.id)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
     def test_get_customer(self):
         """ Get a single Customer """
@@ -188,6 +197,40 @@ class TestCustomerServer(unittest.TestCase):
         resp = self.app.get('/customers', query_string='username=jf')
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
+    def test_bad_request(self):
+        """ Test a Bad Request error from Update Customer """
+        new_customer = {"useinvalidame": "jf"}
+        data = json.dumps(new_customer)
+        resp = self.app.put('/customers/1', data=data, content_type='application/json')
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_not_found_exception_update_customer(self):
+        """ Test not found exception error from update customer"""
+        new_customer = {"username": "jf",
+                        "password": "12345",
+                        "firstname": "jinfan",
+                        "lastname": "yang",
+                        "address": "nyu",
+                        "phone": "123-456-7890",
+                        "email": "jy2296@nyu.edu",
+                        "status": 0,
+                        "promo": 1}
+
+        data = json.dumps(new_customer)
+        resp = self.app.put('/customers/1000000', data=data, content_type='application/json')
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_not_found_get_customer_by_username(self):
+        """ Test a Not Found error from Find By UserId """
+        #not_found_mock.side_effect = server.HTTP_404_NOT_FOUND
+        resp = self.app.get('/customers/username=IDONOTEXIST')
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_method_not_supported_error(self):
+        """ Test a Method not Supported error from Update Customer """
+        data = 'foo'
+        resp = self.app.put('/customers', data = data, content_type='text/plain')
+        self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
 ######################################################################
 # Utility functions

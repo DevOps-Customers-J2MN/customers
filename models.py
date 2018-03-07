@@ -29,7 +29,7 @@ from flask_sqlalchemy import SQLAlchemy
 db = SQLAlchemy()
 
 class DataValidationError(Exception):
-    """ Used for an data validation errors when deserializing """
+    """ Used for any data validation errors when deserializing """
     pass
 
 

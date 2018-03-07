@@ -190,6 +190,12 @@ class TestCustomerServer(unittest.TestCase):
     #     resp = self.app.get('/pets', query_string='name=fido')
     #     self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
+
+    def test_not_found_error(self):
+        """ Test showing exception handling 404 """
+        rv = self.app.get('/4444')
+        self.assertEqual(rv.status_code, 404)
+
     def test_bad_request(self):
         """ Test a Bad Request error from Update Customer """
         new_customer = {"useinvalidame": "jf"}

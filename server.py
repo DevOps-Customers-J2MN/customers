@@ -43,6 +43,7 @@ HTTP_201_CREATED = 201
 HTTP_204_NO_CONTENT = 204
 HTTP_400_BAD_REQUEST = 400
 HTTP_404_NOT_FOUND = 404
+HTTP_405_METHOD_NOT_ALLOWED = 405
 HTTP_409_CONFLICT = 409
 
 ######################################################################
@@ -66,9 +67,7 @@ def not_found(error):
 @app.errorhandler(405)
 def method_not_supported(error):
     """ Handles bad method calls """
-    return jsonify(status=405, error='Method not Allowed',
-                   message='Your request method is not supported.' \
-                   ' Check your HTTP method and try again.'), 405
+    return jsonify(status=405, error='Method not Allowed', message=error.message), 405
 
 @app.errorhandler(415)
 def mediatype_not_supported(error):
@@ -123,17 +122,23 @@ def get_customers(id):
 ######################################################################
 # RETRIEVE A CUSTOMER By Username
 ######################################################################
-@app.route('/customers/username=<username>', methods=['GET'])
-def get_customer_by_username(username):
+@app.route('/customers/search', methods=['GET'])
+def get_customer_by_search():
     """ Retrieve a Customer with a specific username"""
-    customer = Customer.find_by_username(username).first()
-    if customer:
-        print 'return customer'
-        message = customer.serialize()
-        return_code = HTTP_200_OK
+
+    if 'username' in request.args:
+        username=request.args['username']
+        customer = Customer.find_by_username(username).first()
+        if customer:
+            print 'return customer'
+            message = customer.serialize()
+            return_code = HTTP_200_OK
+        else:
+            message = {'error': 'Customer with username: %s was not found' % username}
+            return_code = HTTP_404_NOT_FOUND
     else:
-        message = {'error': 'Customer with username: %s was not found' % username}
-        return_code = HTTP_404_NOT_FOUND
+        message = {'error': 'Your request method is not supported. Only username search supported.'}
+        return_code = HTTP_405_METHOD_NOT_ALLOWED
 
     return jsonify(message), return_code
 

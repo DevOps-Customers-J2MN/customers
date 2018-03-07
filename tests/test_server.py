@@ -84,7 +84,7 @@ class TestCustomerServer(unittest.TestCase):
     def test_get_customer_by_username(self):
         """ Get customer by username """
         customer = Customer.find_by_username('jf')[0]
-        resp = self.app.get('/customers/username=jf')
+        resp = self.app.get('/customers/search?username=jf')
         data=json.loads(resp.data)
         self.assertEquals(data['username'],customer.username)
         self.assertEquals(data['id'],customer.id)
@@ -190,13 +190,6 @@ class TestCustomerServer(unittest.TestCase):
     #     resp = self.app.get('/pets', query_string='name=fido')
     #     self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
-    @patch('server.Customer.find_by_username')
-    def test_mock_search_data(self, username_find_mock):
-        """ Test showing how to mock data """
-        username_find_mock.return_value = [MagicMock(serialize=lambda: {'username': 'jf'})]
-        resp = self.app.get('/customers', query_string='username=jf')
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
-
     def test_bad_request(self):
         """ Test a Bad Request error from Update Customer """
         new_customer = {"useinvalidame": "jf"}
@@ -223,13 +216,13 @@ class TestCustomerServer(unittest.TestCase):
     def test_not_found_get_customer_by_username(self):
         """ Test a Not Found error from Find By UserId """
         #not_found_mock.side_effect = server.HTTP_404_NOT_FOUND
-        resp = self.app.get('/customers/username=IDONOTEXIST')
+        resp = self.app.get('/customers/search?username=IDONOTEXIST')
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_method_not_supported_error(self):
-        """ Test a Method not Supported error from Update Customer """
-        data = 'foo'
-        resp = self.app.put('/customers', data = data, content_type='text/plain')
+    def test_method_not_allowed_customer_email_search(self):
+        """ Test a Method not Supported error from Customer Search """
+        #not_found_mock.side_effect = server.HTTP_404_NOT_FOUND
+        resp = self.app.get('/customers/search?email=amnot@right.com')
         self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
 ######################################################################

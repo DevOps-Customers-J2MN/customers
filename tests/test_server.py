@@ -84,7 +84,7 @@ class TestCustomerServer(unittest.TestCase):
     def test_get_customer_by_username(self):
         """ Get customer by username """
         customer = Customer.find_by_username('jf')[0]
-        resp = self.app.get('/customers/search?username=jf')
+        resp = self.app.get('/customers?username=jf')
         data=json.loads(resp.data)
         self.assertEquals(data['username'],customer.username)
         self.assertEquals(data['id'],customer.id)
@@ -222,13 +222,13 @@ class TestCustomerServer(unittest.TestCase):
     def test_not_found_get_customer_by_username(self):
         """ Test a Not Found error from Find By UserId """
         #not_found_mock.side_effect = server.HTTP_404_NOT_FOUND
-        resp = self.app.get('/customers/search?username=IDONOTEXIST')
+        resp = self.app.get('/customers?username=IDONOTEXIST')
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_method_not_allowed_customer_email_search(self):
         """ Test a Method not Supported error from Customer Search """
         #not_found_mock.side_effect = server.HTTP_404_NOT_FOUND
-        resp = self.app.get('/customers/search?email=amnot@right.com')
+        resp = self.app.get('/customers?email=amnot@right.com')
         self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
 ######################################################################

@@ -95,15 +95,32 @@ def index():
                    url=url_for('list_customers', _external=True)), HTTP_200_OK
 
 ######################################################################
-# LIST ALL CUSTOMERS
+# LIST ALL CUSTOMERS AND QUERY
 ######################################################################
 @app.route('/customers', methods=['GET'])
 def list_customers():
-    """ Retrieves a list of customers from the database """
+    """ Retrieves a list of customers from the database or query username"""
+    arguments = len(request.args)
     results = []
-    results = Customer.all()
+    if arguments==0:
+        results = Customer.all()
+        return jsonify([customer.serialize() for customer in results]), HTTP_200_OK
+    elif 'username' in request.args:
+        username=request.args['username']
+        customer = Customer.find_by_username(username).first()
+        if customer:
+            print 'return customer'
+            message = customer.serialize()
+            return_code = HTTP_200_OK
+        else:
+            message = {'error': 'Customer with username: %s was not found' % username}
+            return_code = HTTP_404_NOT_FOUND
+    else:
+        message = {'error': 'Your request method is not supported. Only username search supported.'}
+        return_code = HTTP_405_METHOD_NOT_ALLOWED
 
-    return jsonify([customer.serialize() for customer in results]), HTTP_200_OK
+    return jsonify(message), return_code
+
 
 ######################################################################
 # RETRIEVE A CUSTOMER By ID
@@ -118,29 +135,6 @@ def get_customers(id):
     else:
         message = {'error' : 'Customer with id: %s was not found' % str(id)}
         return_code = HTTP_404_NOT_FOUND
-
-    return jsonify(message), return_code
-
-######################################################################
-# RETRIEVE A CUSTOMER By Username
-######################################################################
-@app.route('/customers/search', methods=['GET'])
-def get_customer_by_search():
-    """ Retrieve a Customer with a specific username"""
-
-    if 'username' in request.args:
-        username=request.args['username']
-        customer = Customer.find_by_username(username).first()
-        if customer:
-            print 'return customer'
-            message = customer.serialize()
-            return_code = HTTP_200_OK
-        else:
-            message = {'error': 'Customer with username: %s was not found' % username}
-            return_code = HTTP_404_NOT_FOUND
-    else:
-        message = {'error': 'Your request method is not supported. Only username search supported.'}
-        return_code = HTTP_405_METHOD_NOT_ALLOWED
 
     return jsonify(message), return_code
 

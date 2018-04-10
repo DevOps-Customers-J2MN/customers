@@ -172,25 +172,6 @@ class TestCustomerServer(unittest.TestCase):
         new_count = self.get_customer_count()
         self.assertEqual(new_count, customer_count - 1)
 
-    # def test_query_pet_list_by_category(self):
-    #     """ Query Pets by Category """
-    #     resp = self.app.get('/pets', query_string='category=dog')
-    #     self.assertEqual(resp.status_code, status.HTTP_200_OK)
-    #     self.assertGreater(len(resp.data), 0)
-    #     self.assertIn('fido', resp.data)
-    #     self.assertNotIn('kitty', resp.data)
-    #     data = json.loads(resp.data)
-    #     query_item = data[0]
-    #     self.assertEqual(query_item['category'], 'dog')
-    #
-    # @patch('server.Pet.find_by_name')
-    # def test_bad_request(self, bad_request_mock):
-    #     """ Test a Bad Request error from Find By Name """
-    #     bad_request_mock.side_effect = DataValidationError()
-    #     resp = self.app.get('/pets', query_string='name=fido')
-    #     self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-
-
     def test_not_found_error(self):
         """ Test showing exception handling 404 """
         rv = self.app.get('/4444')

@@ -8,10 +8,24 @@ Test cases can be run with:
 
 import unittest
 import os
-from models import Customer, DataValidationError, db
+import json
+from mock import patch
+from redis import Redis, ConnectionError
+from models import Customer, DataValidationError
 from server import app
 
-DATABASE_URI = os.getenv('DATABASE_URI', 'sqlite:///db/test.db')
+
+VCAP_SERVICES = {
+    'rediscloud': [
+        {'credentials': {
+            'password': '',
+            'hostname': '127.0.0.1',
+            'port': '6379'
+            }
+        }
+    ]
+}
+
 
 ######################################################################
 #  T E S T   C A S E S
@@ -19,25 +33,12 @@ DATABASE_URI = os.getenv('DATABASE_URI', 'sqlite:///db/test.db')
 class TestCustomers(unittest.TestCase):
     """ Test Cases for Customers """
 
-    @classmethod
-    def setUpClass(cls):
-        """ These run once per Test suite """
-        app.debug = False
-        # Set up the test database
-        app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URI
-
-    @classmethod
-    def tearDownClass(cls):
-        pass
-
     def setUp(self):
-        Customer.init_db(app)
-        db.drop_all()    # clean up the last tests
-        db.create_all()  # make our sqlalchemy tables
+        """ Initialize the Redis database """
+        Customer.init_db()
+        Customer.remove_all()
+        # Customer.init_db(Redis(host='127.0.0.1', port=6379))
 
-    def tearDown(self):
-        db.session.remove()
-        db.drop_all()
 
     def test_create_a_customer(self):
         """ Create a customer and assert that it exists """
@@ -53,7 +54,7 @@ class TestCustomers(unittest.TestCase):
                             promo=1)
 
         self.assertTrue(customer != None)
-        self.assertEqual(customer.id, None)
+        self.assertEqual(customer.id, 0)
         self.assertEqual(customer.username, "jf")
         self.assertEqual(customer.password, '12345')
         self.assertEqual(customer.firstname, 'jinfan')
@@ -80,7 +81,7 @@ class TestCustomers(unittest.TestCase):
                             promo=1)
 
         self.assertTrue(customer != None)
-        self.assertEqual(customer.id, None)
+        self.assertEqual(customer.id, 0)
 
         # Save this customer into database
         customer.save()
@@ -150,7 +151,7 @@ class TestCustomers(unittest.TestCase):
 
         self.assertNotEqual(data, None)
         self.assertIn('id', data)
-        self.assertEqual(data['id'], None)
+        self.assertEqual(data['id'], 0)
         self.assertIn('username', data)
         self.assertEqual(data['username'], "jf")
         self.assertIn('password', data)
@@ -187,7 +188,7 @@ class TestCustomers(unittest.TestCase):
         customer.deserialize(data)
 
         self.assertNotEqual(customer, None)
-        self.assertEqual(customer.id, None)
+        self.assertEqual(customer.id, 0)
         self.assertEqual(customer.username, "jf")
         self.assertEqual(customer.password, "12345")
         self.assertEqual(customer.firstname, "jinfan")
@@ -333,6 +334,29 @@ class TestCustomers(unittest.TestCase):
         self.assertEqual(customers[0].email, "jy2296@nyu.edu")
         self.assertEqual(customers[0].status, 1)
         self.assertEqual(customers[0].promo, 1)
+
+    def test_passing_connection(self):
+        """ Pass in the Redis connection """
+        Customer.init_db(Redis(host='127.0.0.1', port=6379))
+        self.assertIsNotNone(Customer.redis)
+
+    def test_passing_bad_connection(self):
+        """ Pass in a bad Redis connection """
+        self.assertRaises(ConnectionError, Customer.init_db, Redis(host='127.0.0.1', port=6300))
+        self.assertIsNone(Customer.redis)
+
+    @patch.dict(os.environ, {'VCAP_SERVICES': json.dumps(VCAP_SERVICES)})
+    def test_vcap_services(self):
+        """ Test if VCAP_SERVICES works """
+        Customer.init_db()
+        self.assertIsNotNone(Customer.redis)
+
+    @patch('redis.Redis.ping')
+    def test_redis_connection_error(self, ping_error_mock):
+        """ Test a Bad Redis connection """
+        ping_error_mock.side_effect = ConnectionError()
+        self.assertRaises(ConnectionError, Customer.init_db)
+        self.assertIsNone(Customer.redis)
 
 
 ######################################################################

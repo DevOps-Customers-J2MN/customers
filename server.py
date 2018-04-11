@@ -95,8 +95,8 @@ def list_customers():
         results = Customer.all()
         return jsonify([customer.serialize() for customer in results]), HTTP_200_OK
     elif 'username' in request.args:
-        username=request.args['username']
-        customer = Customer.find_by_username(username).first()
+        username = request.args['username']
+        customer = Customer.find_by_username(username)[0]
         if customer:
             print 'return customer'
             message = customer.serialize()

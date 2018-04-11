@@ -310,7 +310,6 @@ class TestCustomers(unittest.TestCase):
         self.assertEqual(customers[0].status, 1)
         self.assertEqual(customers[0].promo, 1)
 
-
     def test_find_by_promo(self):
         """ Find Customers by promo """
         Customer(username='jf', password='12345',
@@ -334,6 +333,81 @@ class TestCustomers(unittest.TestCase):
         self.assertEqual(customers[0].email, "jy2296@nyu.edu")
         self.assertEqual(customers[0].status, 1)
         self.assertEqual(customers[0].promo, 1)
+
+    def test_save_customer_with_no_username(self):
+        """ Save a Customer with no username """
+        customer = Customer(0, password='2345',
+                 firstname='jahnavi', lastname='kalyani',
+                 address='seattle', phone='987-456-0123',
+                 email='jk5667@nyu.edu', status=1, promo=0)
+        self.assertRaises(DataValidationError, customer.save)
+
+    def test_save_customer_with_no_password(self):
+        """ Save a Customer with no password """
+        customer = Customer(0, username='jk', firstname='jahnavi', 
+                 lastname='kalyani', address='seattle', 
+                 phone='987-456-0123', email='jk5667@nyu.edu', 
+                 status=1, promo=0)
+        self.assertRaises(DataValidationError, customer.save)
+
+    def test_save_customer_with_no_firstname(self):
+        """ Save a Customer with no firstname """
+        customer = Customer(0, username='jk', password='2345',
+                 lastname='kalyani', address='seattle', 
+                 phone='987-456-0123', email='jk5667@nyu.edu', 
+                 status=1, promo=0)
+        self.assertRaises(DataValidationError, customer.save)
+
+    def test_save_customer_with_no_lastname(self):
+        """ Save a Customer with no lastname """
+        customer = Customer(0, username='jk', password='2345',
+                 firstname='jahnavi', address='seattle', 
+                 phone='987-456-0123', email='jk5667@nyu.edu', 
+                 status=1, promo=0)
+        self.assertRaises(DataValidationError, customer.save)
+
+    def test_save_customer_with_no_email(self):
+        """ Save a Customer with no email """
+        customer = Customer(0, username='jk', password='2345',
+                 firstname='jahnavi', lastname='kalyani', 
+                 address='seattle', phone='987-456-0123', 
+                 status=1, promo=0)
+        self.assertRaises(DataValidationError, customer.save)
+
+    def test_save_customer_with_no_status(self):
+        """ Save a Customer with no status """
+        customer = Customer(0, username='jk', password='2345',
+                 firstname='jahnavi', lastname='kalyani', 
+                 address='seattle', phone='987-456-0123', 
+                 email='jk5667@nyu.edu', promo=0)
+        self.assertRaises(DataValidationError, customer.save)
+
+    def test_save_customer_with_no_promo(self):
+        """ Save a Customer with no status """
+        customer = Customer(0, username='jk', password='2345',
+                 firstname='jahnavi', lastname='kalyani', 
+                 address='seattle', phone='987-456-0123', 
+                 email='jk5667@nyu.edu', status=0)
+        self.assertRaises(DataValidationError, customer.save)
+
+    def test_customer_not_found(self):
+        """ Find a Pet that doesnt exist """
+        Customer(0, username='jk', password='2345',
+                 firstname='jahnavi', lastname='kalyani',
+                 address='seattle', phone='987-456-0123',
+                 email='jk5667@nyu.edu', status=1, promo=0).save()
+        customer = Customer.find(2)
+        self.assertIs(customer, None)
+
+    def test_deserialize_with_no_data(self):
+        """ Deserialize a Customer that has no data """
+        customer = Customer(0)
+        self.assertRaises(DataValidationError, customer.deserialize, None)
+
+    def test_deserialize_with_bad_data(self):
+        """ Deserialize a Pet that has bad data """
+        customer = Customer(0)
+        self.assertRaises(DataValidationError, customer.deserialize, "string data")
 
     def test_passing_connection(self):
         """ Pass in the Redis connection """

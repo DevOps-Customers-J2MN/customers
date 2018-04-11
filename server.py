@@ -19,21 +19,11 @@ import logging
 from flask import Flask, Response, jsonify, request, json, url_for, make_response
 from flask_api import status    # HTTP Status Codes
 
-from flask_sqlalchemy import SQLAlchemy
-
 from models import Customer, DataValidationError
 
 # Create Flask application
 app = Flask(__name__)
-
-# We'll just use SQLite here so we don't need an external database
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db/development.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = 'secret key'
 app.config['LOGGING_LEVEL'] = logging.INFO
-
-# Initialize SQLAlchemy
-db = SQLAlchemy(app)
 
 # Pull options from environment
 DEBUG = (os.getenv('DEBUG', 'False') == 'True')
@@ -45,7 +35,6 @@ HTTP_201_CREATED = 201
 HTTP_204_NO_CONTENT = 204
 HTTP_400_BAD_REQUEST = 400
 HTTP_404_NOT_FOUND = 404
-HTTP_405_METHOD_NOT_ALLOWED = 405
 HTTP_409_CONFLICT = 409
 
 ######################################################################
@@ -201,10 +190,11 @@ def list_customers_promo(promo):
 ######################################################################
 #   U T I L I T Y   F U N C T I O N S
 ######################################################################
-def init_db():
-    "Initialies the SQLAlchemy app"
-    global app
-    Customer.init_db(app)
+
+@app.before_first_request
+def init_db(redis=None):
+    """ Initlaize the model """
+    Customer.init_db(redis)
 
 
 def initialize_logging(log_level=logging.INFO):
@@ -236,7 +226,6 @@ if __name__ == "__main__":
     print " C U S T O M E R  S E R V I C E "
     print "*********************************"
     initialize_logging()
-    # make sqlalchemy tables
     init_db()
     app.run(host='0.0.0.0', port=int(PORT), debug=DEBUG)
 

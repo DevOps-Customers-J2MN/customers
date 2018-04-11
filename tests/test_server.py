@@ -7,17 +7,15 @@ Test cases can be run with the following:
   coverage report -m
 """
 
-import unittest
 import os
-import json
+import unittest
 import logging
-from flask_api import status    # HTTP Status Codes
+import json
+import server
+from flask_api import status
+from models import Customer, DataValidationError
 from mock import MagicMock, patch
 
-from models import Customer, DataValidationError, db
-import server
-
-DATABASE_URI = os.getenv('DATABASE_URI', 'sqlite:///db/test.db')
 
 ######################################################################
 #  T E S T   C A S E S
@@ -25,39 +23,15 @@ DATABASE_URI = os.getenv('DATABASE_URI', 'sqlite:///db/test.db')
 class TestCustomerServer(unittest.TestCase):
     """ Customer Server Tests """
 
-    @classmethod
-    def setUpClass(cls):
-        """ Run once before all tests """
-        server.app.debug = False
-        server.initialize_logging(logging.INFO)
-        # Set up the test database
-        server.app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URI
-
-    @classmethod
-    def tearDownClass(cls):
-        pass
-
     def setUp(self):
-        """ Runs before each test """
-        server.init_db()
-        db.drop_all()    # clean up the last tests
-        db.create_all()  # create new tables
-
-        Customer(username='MeenakshiSundaram', password='123',
-                 firstname='Meenakshi', lastname='Sundaram',
-                 address='Jersey City', phone='2016604601',
-                 email='msa503@nyu.edu', status=1, promo=1).save()
-
-        Customer(username='jf', password='12345',
-                 firstname='jinfan', lastname='yang',
-                 address='nyu', phone='123-456-7890',
-                 email='jy2296@nyu.edu', status=1, promo=0).save()
-
         self.app = server.app.test_client()
-
-    def tearDown(self):
-        db.session.remove()
-        db.drop_all()
+        server.initialize_logging(logging.CRITICAL)
+        server.init_db()
+        server.data_reset()
+        server.data_load({"username":"MeenakshiSundaram", "password":"123", "firstname":"Meenakshi", "lastname":"Sundaram",
+            "address":"Jersey City", "phone":"2016604601","email":"msa503@nyu.edu", "status":1, "promo":1})
+        server.data_load({"username":"jf", "password":"12345", "firstname":"jinfan", "lastname":"yang",
+            "address":"nyu", "phone":"123-456-7890","email":"jy2296@nyu.edu", "status":1, "promo":0})
 
     def test_index(self):
         """ Test the Home Page """
@@ -85,9 +59,9 @@ class TestCustomerServer(unittest.TestCase):
         """ Get customer by username """
         customer = Customer.find_by_username('jf')[0]
         resp = self.app.get('/customers?username=jf')
-        data=json.loads(resp.data)
-        self.assertEquals(data['username'],customer.username)
-        self.assertEquals(data['id'],customer.id)
+        data = json.loads(resp.data)
+        self.assertEqual(data['username'], customer.username)
+        self.assertEqual(data['id'], customer.id)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
     def test_get_customer(self):

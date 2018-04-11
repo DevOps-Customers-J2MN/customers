@@ -35,6 +35,7 @@ HTTP_201_CREATED = 201
 HTTP_204_NO_CONTENT = 204
 HTTP_400_BAD_REQUEST = 400
 HTTP_404_NOT_FOUND = 404
+HTTP_405_METHOD_NOT_ALLOWED = 405
 HTTP_409_CONFLICT = 409
 
 ######################################################################
@@ -96,8 +97,9 @@ def list_customers():
         return jsonify([customer.serialize() for customer in results]), HTTP_200_OK
     elif 'username' in request.args:
         username = request.args['username']
-        customer = Customer.find_by_username(username)[0]
+        customer = Customer.find_by_username(username)
         if customer:
+            customer = customer[0]
             print 'return customer'
             message = customer.serialize()
             return_code = HTTP_200_OK

@@ -196,6 +196,23 @@ def init_db(redis=None):
     """ Initlaize the model """
     Customer.init_db(redis)
 
+def data_load(payload):
+    """ Loads a Pet into the database """
+    customer = Customer(0, 
+        payload['username'], 
+        payload['password'], 
+        payload['firstname'], 
+        payload['lastname'], 
+        payload['address'], 
+        payload['phone'], 
+        payload['email'], 
+        payload['status'], 
+        payload['promo'])
+    customer.save()
+
+def data_reset():
+    """ Removes all Pets from the database """
+    Customer.remove_all()
 
 def initialize_logging(log_level=logging.INFO):
     """ Initialized the default logging to STDOUT """

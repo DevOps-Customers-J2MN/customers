@@ -38,10 +38,11 @@ class Customer(object):
     logger = logging.getLogger(__name__)
     redis = None
 
-    def __init__(self, id=0, username=None, firstname=None, lastname=None, address=None, phone=None, email=None, status=None, promo=None):
+    def __init__(self, id=0, username=None, password=None, firstname=None, lastname=None, address=None, phone=None, email=None, status=None, promo=None):
         """ Constructor """
         self.id = int(id)
         self.username = username
+        self.password = password
         self.firstname = firstname
         self.lastname = lastname
         self.address = address

@@ -7,17 +7,15 @@ Test cases can be run with the following:
   coverage report -m
 """
 
-import unittest
 import os
-import json
+import unittest
 import logging
-from flask_api import status    # HTTP Status Codes
+import json
+import server
+from flask_api import status
+from models import Customer, DataValidationError
 from mock import MagicMock, patch
 
-from models import Customer, DataValidationError, db
-import server
-
-DATABASE_URI = os.getenv('DATABASE_URI', 'sqlite:///db/test.db')
 
 ######################################################################
 #  T E S T   C A S E S
@@ -25,39 +23,15 @@ DATABASE_URI = os.getenv('DATABASE_URI', 'sqlite:///db/test.db')
 class TestCustomerServer(unittest.TestCase):
     """ Customer Server Tests """
 
-    @classmethod
-    def setUpClass(cls):
-        """ Run once before all tests """
-        server.app.debug = False
-        server.initialize_logging(logging.INFO)
-        # Set up the test database
-        server.app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URI
-
-    @classmethod
-    def tearDownClass(cls):
-        pass
-
     def setUp(self):
-        """ Runs before each test """
-        server.init_db()
-        db.drop_all()    # clean up the last tests
-        db.create_all()  # create new tables
-
-        Customer(username='MeenakshiSundaram', password='123',
-                 firstname='Meenakshi', lastname='Sundaram',
-                 address='Jersey City', phone='2016604601',
-                 email='msa503@nyu.edu', status=1, promo=1).save()
-
-        Customer(username='jf', password='12345',
-                 firstname='jinfan', lastname='yang',
-                 address='nyu', phone='123-456-7890',
-                 email='jy2296@nyu.edu', status=1, promo=0).save()
-
         self.app = server.app.test_client()
-
-    def tearDown(self):
-        db.session.remove()
-        db.drop_all()
+        server.initialize_logging(logging.CRITICAL)
+        server.init_db()
+        server.data_reset()
+        server.data_load({"username":"MeenakshiSundaram", "password":"123", "firstname":"Meenakshi", "lastname":"Sundaram",
+            "address":"Jersey City", "phone":"2016604601","email":"msa503@nyu.edu", "status":1, "promo":1})
+        server.data_load({"username":"jf", "password":"12345", "firstname":"jinfan", "lastname":"yang",
+            "address":"nyu", "phone":"123-456-7890","email":"jy2296@nyu.edu", "status":1, "promo":0})
 
     def test_index(self):
         """ Test the Home Page """
@@ -85,9 +59,9 @@ class TestCustomerServer(unittest.TestCase):
         """ Get customer by username """
         customer = Customer.find_by_username('jf')[0]
         resp = self.app.get('/customers?username=jf')
-        data=json.loads(resp.data)
-        self.assertEquals(data['username'],customer.username)
-        self.assertEquals(data['id'],customer.id)
+        data = json.loads(resp.data)
+        self.assertEqual(data['username'], customer.username)
+        self.assertEqual(data['id'], customer.id)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
     def test_get_customer(self):
@@ -176,6 +150,26 @@ class TestCustomerServer(unittest.TestCase):
         """ Test showing exception handling 404 """
         rv = self.app.get('/4444')
         self.assertEqual(rv.status_code, 404)
+
+    def test_get_nonexisting_customer(self):
+        """ Get a nonexisting Customer """
+        resp = self.app.get('/customers/5')
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_call_create_with_an_id(self):
+        """ Call create passing an id """
+        new_customer = {"username": "jk",
+                        "password": "249",
+                        "firstname": "jahn",
+                        "lastname": "kalyani",
+                        "address": "raleigh",
+                        "phone": "632-262-6362",
+                        "email": "jk1378@nyu.edu",
+                        "status": 1,
+                        "promo": 0}
+        data = json.dumps(new_customer)
+        resp = self.app.post('/customers/1', data=data)
+        self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
     def test_bad_request(self):
         """ Test a Bad Request error from Update Customer """

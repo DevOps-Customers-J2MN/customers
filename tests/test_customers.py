@@ -8,10 +8,24 @@ Test cases can be run with:
 
 import unittest
 import os
-from models import Customer, DataValidationError, db
+import json
+from mock import patch
+from redis import Redis, ConnectionError
+from models import Customer, DataValidationError
 from server import app
 
-DATABASE_URI = os.getenv('DATABASE_URI', 'sqlite:///db/test.db')
+
+VCAP_SERVICES = {
+    'rediscloud': [
+        {'credentials': {
+            'password': '',
+            'hostname': '127.0.0.1',
+            'port': '6379'
+            }
+        }
+    ]
+}
+
 
 ######################################################################
 #  T E S T   C A S E S
@@ -19,25 +33,12 @@ DATABASE_URI = os.getenv('DATABASE_URI', 'sqlite:///db/test.db')
 class TestCustomers(unittest.TestCase):
     """ Test Cases for Customers """
 
-    @classmethod
-    def setUpClass(cls):
-        """ These run once per Test suite """
-        app.debug = False
-        # Set up the test database
-        app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URI
-
-    @classmethod
-    def tearDownClass(cls):
-        pass
-
     def setUp(self):
-        Customer.init_db(app)
-        db.drop_all()    # clean up the last tests
-        db.create_all()  # make our sqlalchemy tables
+        """ Initialize the Redis database """
+        Customer.init_db()
+        Customer.remove_all()
+        # Customer.init_db(Redis(host='127.0.0.1', port=6379))
 
-    def tearDown(self):
-        db.session.remove()
-        db.drop_all()
 
     def test_create_a_customer(self):
         """ Create a customer and assert that it exists """
@@ -53,7 +54,7 @@ class TestCustomers(unittest.TestCase):
                             promo=1)
 
         self.assertTrue(customer != None)
-        self.assertEqual(customer.id, None)
+        self.assertEqual(customer.id, 0)
         self.assertEqual(customer.username, "jf")
         self.assertEqual(customer.password, '12345')
         self.assertEqual(customer.firstname, 'jinfan')
@@ -80,7 +81,7 @@ class TestCustomers(unittest.TestCase):
                             promo=1)
 
         self.assertTrue(customer != None)
-        self.assertEqual(customer.id, None)
+        self.assertEqual(customer.id, 0)
 
         # Save this customer into database
         customer.save()
@@ -150,7 +151,7 @@ class TestCustomers(unittest.TestCase):
 
         self.assertNotEqual(data, None)
         self.assertIn('id', data)
-        self.assertEqual(data['id'], None)
+        self.assertEqual(data['id'], 0)
         self.assertIn('username', data)
         self.assertEqual(data['username'], "jf")
         self.assertIn('password', data)
@@ -187,7 +188,7 @@ class TestCustomers(unittest.TestCase):
         customer.deserialize(data)
 
         self.assertNotEqual(customer, None)
-        self.assertEqual(customer.id, None)
+        self.assertEqual(customer.id, 0)
         self.assertEqual(customer.username, "jf")
         self.assertEqual(customer.password, "12345")
         self.assertEqual(customer.firstname, "jinfan")
@@ -309,7 +310,6 @@ class TestCustomers(unittest.TestCase):
         self.assertEqual(customers[0].status, 1)
         self.assertEqual(customers[0].promo, 1)
 
-
     def test_find_by_promo(self):
         """ Find Customers by promo """
         Customer(username='jf', password='12345',
@@ -333,6 +333,104 @@ class TestCustomers(unittest.TestCase):
         self.assertEqual(customers[0].email, "jy2296@nyu.edu")
         self.assertEqual(customers[0].status, 1)
         self.assertEqual(customers[0].promo, 1)
+
+    def test_save_customer_with_no_username(self):
+        """ Save a Customer with no username """
+        customer = Customer(0, password='2345',
+                 firstname='jahnavi', lastname='kalyani',
+                 address='seattle', phone='987-456-0123',
+                 email='jk5667@nyu.edu', status=1, promo=0)
+        self.assertRaises(DataValidationError, customer.save)
+
+    def test_save_customer_with_no_password(self):
+        """ Save a Customer with no password """
+        customer = Customer(0, username='jk', firstname='jahnavi', 
+                 lastname='kalyani', address='seattle', 
+                 phone='987-456-0123', email='jk5667@nyu.edu', 
+                 status=1, promo=0)
+        self.assertRaises(DataValidationError, customer.save)
+
+    def test_save_customer_with_no_firstname(self):
+        """ Save a Customer with no firstname """
+        customer = Customer(0, username='jk', password='2345',
+                 lastname='kalyani', address='seattle', 
+                 phone='987-456-0123', email='jk5667@nyu.edu', 
+                 status=1, promo=0)
+        self.assertRaises(DataValidationError, customer.save)
+
+    def test_save_customer_with_no_lastname(self):
+        """ Save a Customer with no lastname """
+        customer = Customer(0, username='jk', password='2345',
+                 firstname='jahnavi', address='seattle', 
+                 phone='987-456-0123', email='jk5667@nyu.edu', 
+                 status=1, promo=0)
+        self.assertRaises(DataValidationError, customer.save)
+
+    def test_save_customer_with_no_email(self):
+        """ Save a Customer with no email """
+        customer = Customer(0, username='jk', password='2345',
+                 firstname='jahnavi', lastname='kalyani', 
+                 address='seattle', phone='987-456-0123', 
+                 status=1, promo=0)
+        self.assertRaises(DataValidationError, customer.save)
+
+    def test_save_customer_with_no_status(self):
+        """ Save a Customer with no status """
+        customer = Customer(0, username='jk', password='2345',
+                 firstname='jahnavi', lastname='kalyani', 
+                 address='seattle', phone='987-456-0123', 
+                 email='jk5667@nyu.edu', promo=0)
+        self.assertRaises(DataValidationError, customer.save)
+
+    def test_save_customer_with_no_promo(self):
+        """ Save a Customer with no status """
+        customer = Customer(0, username='jk', password='2345',
+                 firstname='jahnavi', lastname='kalyani', 
+                 address='seattle', phone='987-456-0123', 
+                 email='jk5667@nyu.edu', status=0)
+        self.assertRaises(DataValidationError, customer.save)
+
+    def test_customer_not_found(self):
+        """ Find a Pet that doesnt exist """
+        Customer(0, username='jk', password='2345',
+                 firstname='jahnavi', lastname='kalyani',
+                 address='seattle', phone='987-456-0123',
+                 email='jk5667@nyu.edu', status=1, promo=0).save()
+        customer = Customer.find(2)
+        self.assertIs(customer, None)
+
+    def test_deserialize_with_no_data(self):
+        """ Deserialize a Customer that has no data """
+        customer = Customer(0)
+        self.assertRaises(DataValidationError, customer.deserialize, None)
+
+    def test_deserialize_with_bad_data(self):
+        """ Deserialize a Pet that has bad data """
+        customer = Customer(0)
+        self.assertRaises(DataValidationError, customer.deserialize, "string data")
+
+    def test_passing_connection(self):
+        """ Pass in the Redis connection """
+        Customer.init_db(Redis(host='127.0.0.1', port=6379))
+        self.assertIsNotNone(Customer.redis)
+
+    def test_passing_bad_connection(self):
+        """ Pass in a bad Redis connection """
+        self.assertRaises(ConnectionError, Customer.init_db, Redis(host='127.0.0.1', port=6300))
+        self.assertIsNone(Customer.redis)
+
+    @patch.dict(os.environ, {'VCAP_SERVICES': json.dumps(VCAP_SERVICES)})
+    def test_vcap_services(self):
+        """ Test if VCAP_SERVICES works """
+        Customer.init_db()
+        self.assertIsNotNone(Customer.redis)
+
+    @patch('redis.Redis.ping')
+    def test_redis_connection_error(self, ping_error_mock):
+        """ Test a Bad Redis connection """
+        ping_error_mock.side_effect = ConnectionError()
+        self.assertRaises(ConnectionError, Customer.init_db)
+        self.assertIsNone(Customer.redis)
 
 
 ######################################################################

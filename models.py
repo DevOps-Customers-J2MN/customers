@@ -21,80 +21,80 @@ status (int) - the status of the customer account
 
 """
 
-
+import os
 import logging
-from flask_sqlalchemy import SQLAlchemy
-
-# Create the SQLAlchemy object to be initialized later in init_db()
-db = SQLAlchemy()
+import json
+import pickle
+from redis import Redis
+from redis.exceptions import ConnectionError
 
 class DataValidationError(Exception):
-    """ Used for any data validation errors when deserializing """
+    """ Custom Exception with data validation fails """
     pass
 
+class Customer(object):
+    """ Customer interface to database """
 
-class Customer(db.Model):
-    """
-    Class that represents a Customer
-
-    This version uses a relational database for persistence which is hidden
-    from us by SQLAlchemy's object relational mappings (ORM)
-    """
     logger = logging.getLogger(__name__)
-    app = None
+    redis = None
 
-    # Table Schema
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(63), nullable=False, unique=True)
-    password = db.Column(db.String(63), nullable=False)
-    firstname = db.Column(db.String(63), nullable=False)
-    lastname = db.Column(db.String(63), nullable=False)
-    address = db.Column(db.String(123))
-    phone = db.Column(db.String(15))
-    email = db.Column(db.String(63), nullable=False, unique=True)
-    status = db.Column(db.Integer, nullable=False)
-    promo = db.Column(db.Integer, nullable=False)
+    def __init__(self, id=0, username=None, password=None, firstname=None, lastname=None, address=None, phone=None, email=None, status=None, promo=None):
+        """ Constructor """
+        self.id = int(id)
+        self.username = username
+        self.password = password
+        self.firstname = firstname
+        self.lastname = lastname
+        self.address = address
+        self.phone = phone
+        self.email = email
+        self.status = status
+        self.promo = promo
 
     def __repr__(self):
         return '<Customer %r>' % (self.username)
 
     def save(self):
-        """ Saves a Customer to the data store """
-        customers = Customer.all()
-        if len(customers) == 0 :
-            db.session.add(self)
-        else:
-            customer = Customer.find_by_username(self.username).first()
-            if not customer:
-                db.session.add(self)
-
-        db.session.commit()
+        """ Saves a Customer in the database """
+        if self.username is None:
+            raise DataValidationError('username is not set')
+        if self.password is None:
+            raise DataValidationError('password is not set')
+        if self.firstname is None:
+            raise DataValidationError('firstname is not set')
+        if self.lastname is None:
+            raise DataValidationError('lastname is not set')
+        if self.email is None:
+            raise DataValidationError('email is not set')
+        if self.status is None:
+            raise DataValidationError('status is not set')
+        if self.promo is None:
+            raise DataValidationError('promo is not set')
+        if self.id == 0:
+            self.id = Customer.__next_index()
+        Customer.redis.set(self.id, pickle.dumps(self.serialize()))
 
     def delete(self):
-        """ Removes a Customer from the data store """
-        db.session.delete(self)
-        db.session.commit()
+        """ Deletes a Customer from the database """
+        Customer.redis.delete(self.id)
 
     def serialize(self):
         """ Serializes a Customer into a dictionary """
-        return {"id": self.id,
-                "username": self.username,
-                "password": self.password,
-                "firstname": self.firstname,
-                "lastname": self.lastname,
-                "address": self.address,
-                "phone": self.phone,
-                "email": self.email,
-                "status": self.status,
-                "promo": self.promo}
+        return {
+            "id": self.id,
+            "username": self.username,
+            "password": self.password,
+            "firstname": self.firstname,
+            "lastname": self.lastname,
+            "address": self.address,
+            "phone": self.phone,
+            "email": self.email,
+            "status": self.status,
+            "promo": self.promo
+        }
 
     def deserialize(self, data):
-        """
-        Deserializes a Customer from a dictionary
-
-        Args:
-            data (dict): A dictionary containing the Customer data
-        """
+        """ Deserializes a Customer by marshalling the data """
         if not isinstance(data, dict):
             raise DataValidationError('Invalid customer: body of request contained bad or no data')
         try:
@@ -114,46 +114,81 @@ class Customer(db.Model):
                                       'bad or no data')
         return self
 
-    @staticmethod
-    def init_db(app):
-        """ Initializes the database session """
-        Customer.logger.info('Initializing database')
-        Customer.app = app
+######################################################################
+#  S T A T I C   D A T A B S E   M E T H O D S
+######################################################################
 
-        # This is where we initialize SQLAlchemy from the Flask app
-        db.init_app(app)
-        app.app_context().push()
-        # make our sqlalchemy tables
-        db.create_all()
+    @staticmethod
+    def __next_index():
+        """ Increments the index and returns it """
+        return Customer.redis.incr('index')
+
+    @staticmethod
+    def remove_all():
+        """ Removes all Customers from the database """
+        Customer.redis.flushall()
 
     @staticmethod
     def all():
-        """ Returns all of the Customers in the database """
-        Customer.logger.info('Processing all Customers')
-        return Customer.query.all()
+        """ Query that returns all Customers """
+        # results = [Customer.from_dict(redis.hgetall(key)) for key in redis.keys() if key != 'index']
+        results = []
+        for key in Customer.redis.keys():
+            if key != 'index':  # filer out our id index
+                data = pickle.loads(Customer.redis.get(key))
+                customer = Customer(data['id']).deserialize(data)
+                results.append(customer)
+        return results
+
+
+
+######################################################################
+#  F I N D E R   M E T H O D S
+######################################################################
 
     @staticmethod
     def find(customer_id):
-        """ Finds a Customer by it's ID """
-        Customer.logger.info('Processing lookup for id %s ...', customer_id)
-        return Customer.query.get(customer_id)
+        """ Finds a Customer by their ID """
+        if Customer.redis.exists(customer_id):
+            data = pickle.loads(Customer.redis.get(customer_id))
+            customer = Customer(data['id']).deserialize(data)
+            return customer
+        return None
+
+    @staticmethod
+    def __find_by(attribute, value):
+        """ Generic Query that finds a key with a specific value """
+        Customer.logger.info('Processing %s query for %s', attribute, value)
+        if isinstance(value, str):
+            search_criteria = value.lower() # make case insensitive
+        else:
+            search_criteria = value
+        results = []
+        for key in Customer.redis.keys():
+            if key != 'index':  # filer out our id index
+                data = pickle.loads(Customer.redis.get(key))
+                # perform case insensitive search on strings
+                if isinstance(data[attribute], str):
+                    test_value = data[attribute].lower()
+                else:
+                    test_value = data[attribute]
+                if test_value == search_criteria:
+                    results.append(Customer(data['id']).deserialize(data))
+        return results
 
     @staticmethod
     def find_or_404(customer_id):
         """ Find a Customer by it's ID """
-        Customer.logger.info('Processing lookup or 404 for id %s ...', customer_id)
-        return Customer.query.get_or_404(customer_id)
+        return Customer.__find_by('id', customer_id)
 
     @staticmethod
     def find_by_username(username):
-        """
-        Returns a Customer with the given username
+        """ Returns a Customer with the given username
 
         Args:
             username (string): the username of the Customer you want to match
         """
-        Customer.logger.info('Processing username query for %s ...', username)
-        return Customer.query.filter(Customer.username == username)
+        return Customer.__find_by('username', username)
 
     @staticmethod
     def find_by_email(email):
@@ -163,8 +198,7 @@ class Customer(db.Model):
         Args:
             email (string): the email of the Customer you want to match
         """
-        Customer.logger.info('Processing email query for %s ...', email)
-        return Customer.query.filter(Customer.email == email)
+        return Customer.__find_by('email', email)
 
     @staticmethod
     def find_by_status(status):
@@ -174,8 +208,7 @@ class Customer(db.Model):
         Args:
             status (int): the status of the Customers you want to match
         """
-        Customer.logger.info('Processing status query for %s ...', status)
-        return Customer.query.filter(Customer.status == status)
+        return Customer.__find_by('status', status)
 
     @staticmethod
     def find_by_promo(promo):
@@ -185,6 +218,70 @@ class Customer(db.Model):
         Args:
             promo (int): the status of the Customers you want to match
         """
-        Customer.logger.info('Processing promo query for %s ...', promo)
-        return Customer.query.filter(Customer.promo == promo)
+        return Customer.__find_by('promo', promo)
+
+
+######################################################################
+#  R E D I S   D A T A B A S E   C O N N E C T I O N   M E T H O D S
+######################################################################
+
+    @staticmethod
+    def connect_to_redis(hostname, port, password):
+        """ Connects to Redis and tests the connection """
+        Customer.logger.info("Testing Connection to: %s:%s", hostname, port)
+        Customer.redis = Redis(host=hostname, port=port, password=password)
+        try:
+            Customer.redis.ping()
+            Customer.logger.info("Connection established")
+        except ConnectionError:
+            Customer.logger.info("Connection Error from: %s:%s", hostname, port)
+            Customer.redis = None
+        return Customer.redis
+
+
+    @staticmethod
+    def init_db(redis=None):
+        """
+        Initialized Redis database connection
+
+        This method will work in the following conditions:
+          1) In Bluemix with Redis bound through VCAP_SERVICES
+          2) With Redis running on the local server as with Travis CI
+          3) With Redis --link in a Docker container called 'redis'
+          4) Passing in your own Redis connection object
+
+        Exception:
+        ----------
+          redis.ConnectionError - if ping() test fails
+        """
+        if redis:
+            Customer.logger.info("Using client connection...")
+            Customer.redis = redis
+            try:
+                Customer.redis.ping()
+                Customer.logger.info("Connection established")
+            except ConnectionError:
+                Customer.logger.error("Client Connection Error!")
+                Customer.redis = None
+                raise ConnectionError('Could not connect to the Redis Service')
+            return
+        # Get the credentials from the Bluemix environment
+        if 'VCAP_SERVICES' in os.environ:
+            Customer.logger.info("Using VCAP_SERVICES...")
+            vcap_services = os.environ['VCAP_SERVICES']
+            services = json.loads(vcap_services)
+            creds = services['rediscloud'][0]['credentials']
+            Customer.logger.info("Conecting to Redis on host %s port %s",
+                            creds['hostname'], creds['port'])
+            Customer.connect_to_redis(creds['hostname'], creds['port'], creds['password'])
+        else:
+            Customer.logger.info("VCAP_SERVICES not found, checking localhost for Redis")
+            Customer.connect_to_redis('127.0.0.1', 6379, None)
+            if not Customer.redis:
+                Customer.logger.info("No Redis on localhost, looking for redis host")
+                Customer.connect_to_redis('redis', 6379, None)
+        if not Customer.redis:
+            # if you end up here, redis instance is down.
+            Customer.logger.fatal('*** FATAL ERROR: Could not connect to the Redis Service')
+            raise ConnectionError('Could not connect to the Redis Service')
 

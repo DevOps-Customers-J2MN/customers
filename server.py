@@ -19,21 +19,11 @@ import logging
 from flask import Flask, Response, jsonify, request, json, url_for, make_response
 from flask_api import status    # HTTP Status Codes
 
-from flask_sqlalchemy import SQLAlchemy
-
 from models import Customer, DataValidationError
 
 # Create Flask application
 app = Flask(__name__)
-
-# We'll just use SQLite here so we don't need an external database
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db/development.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = 'secret key'
 app.config['LOGGING_LEVEL'] = logging.INFO
-
-# Initialize SQLAlchemy
-db = SQLAlchemy(app)
 
 # Pull options from environment
 DEBUG = (os.getenv('DEBUG', 'False') == 'True')
@@ -106,10 +96,10 @@ def list_customers():
         results = Customer.all()
         return jsonify([customer.serialize() for customer in results]), HTTP_200_OK
     elif 'username' in request.args:
-        username=request.args['username']
-        customer = Customer.find_by_username(username).first()
+        username = request.args['username']
+        customer = Customer.find_by_username(username)
         if customer:
-            print 'return customer'
+            customer = customer[0]
             message = customer.serialize()
             return_code = HTTP_200_OK
         else:
@@ -201,11 +191,29 @@ def list_customers_promo(promo):
 ######################################################################
 #   U T I L I T Y   F U N C T I O N S
 ######################################################################
-def init_db():
-    "Initialies the SQLAlchemy app"
-    global app
-    Customer.init_db(app)
 
+@app.before_first_request
+def init_db(redis=None):
+    """ Initlaize the model """
+    Customer.init_db(redis)
+
+def data_load(payload):
+    """ Loads a Pet into the database """
+    customer = Customer(0, 
+        payload['username'], 
+        payload['password'], 
+        payload['firstname'], 
+        payload['lastname'], 
+        payload['address'], 
+        payload['phone'], 
+        payload['email'], 
+        payload['status'], 
+        payload['promo'])
+    customer.save()
+
+def data_reset():
+    """ Removes all Pets from the database """
+    Customer.remove_all()
 
 def initialize_logging(log_level=logging.INFO):
     """ Initialized the default logging to STDOUT """
@@ -236,7 +244,6 @@ if __name__ == "__main__":
     print " C U S T O M E R  S E R V I C E "
     print "*********************************"
     initialize_logging()
-    # make sqlalchemy tables
     init_db()
     app.run(host='0.0.0.0', port=int(PORT), debug=DEBUG)
 

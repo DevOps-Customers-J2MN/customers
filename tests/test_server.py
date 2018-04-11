@@ -151,6 +151,26 @@ class TestCustomerServer(unittest.TestCase):
         rv = self.app.get('/4444')
         self.assertEqual(rv.status_code, 404)
 
+    def test_get_nonexisting_customer(self):
+        """ Get a nonexisting Customer """
+        resp = self.app.get('/customers/5')
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_call_create_with_an_id(self):
+        """ Call create passing an id """
+        new_customer = {"username": "jk",
+                        "password": "249",
+                        "firstname": "jahn",
+                        "lastname": "kalyani",
+                        "address": "raleigh",
+                        "phone": "632-262-6362",
+                        "email": "jk1378@nyu.edu",
+                        "status": 1,
+                        "promo": 0}
+        data = json.dumps(new_customer)
+        resp = self.app.post('/customers/1', data=data)
+        self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
     def test_bad_request(self):
         """ Test a Bad Request error from Update Customer """
         new_customer = {"useinvalidame": "jf"}

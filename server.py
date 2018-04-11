@@ -100,7 +100,6 @@ def list_customers():
         customer = Customer.find_by_username(username)
         if customer:
             customer = customer[0]
-            print 'return customer'
             message = customer.serialize()
             return_code = HTTP_200_OK
         else:

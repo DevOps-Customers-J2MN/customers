@@ -1,0 +1,11 @@
+applications:
+- path: .
+  memory: 64M
+  instances: 2
+  domain: mybluemix.net
+  name: nyu-customer-service-s18
+  #host: nyu-customer-service-s18
+  disk_quota: 512M
+  buildpack: python_buildpack
+  services:
+  - RedisCloud

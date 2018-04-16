@@ -91,6 +91,7 @@ def index():
 def list_customers():
     """ Retrieves a list of customers from the database or query username"""
     arguments = len(request.args)
+    print(arguments)
     results = []
     if arguments==0:
         results = Customer.all()

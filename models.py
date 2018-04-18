@@ -17,8 +17,8 @@ last name (string) - the last name of the customer
 address (string) - the address of the customer
 phone (string) - the phone of the customer
 email (string) - the email of the customer
-status (int) - the status of the customer account
-
+status (int) - the status of the customer account (0: inactive, 1: active)
+promo (int) - the subscription status of the customer (0: no subscribe, 1: subscribe)
 """
 
 import os
@@ -284,4 +284,3 @@ class Customer(object):
             # if you end up here, redis instance is down.
             Customer.logger.fatal('*** FATAL ERROR: Could not connect to the Redis Service')
             raise ConnectionError('Could not connect to the Redis Service')
-

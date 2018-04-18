@@ -133,6 +133,44 @@ class TestCustomerServer(unittest.TestCase):
         new_json = json.loads(resp.data)
         self.assertEqual(new_json['status'], 0)
 
+    def test_subscribe_customer(self):
+        """ Subscribe an existing Customer"""
+        customer = Customer.find_by_username('jf')[0]
+        new_customer = {"username": customer.username,
+                        "password": customer.password,
+                        "firstname": customer.firstname,
+                        "lastname": customer.lastname,
+                        "address": customer.address,
+                        "phone": customer.phone,
+                        "email": customer.email,
+                        "status": customer.status,
+                        "promo": 1}
+
+        data = json.dumps(new_customer)
+        resp = self.app.put('/customers/{}/subscribe'.format(customer.id), data=data, content_type='application/json')
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        new_json = json.loads(resp.data)
+        self.assertEqual(new_json['promo'], 1)
+
+    def test_deactivate_customer(self):
+        """ Deactivate an existing Customer"""
+        customer = Customer.find_by_username('jf')[0]
+        new_customer = {"username": customer.username,
+                        "password": customer.password,
+                        "firstname": customer.firstname,
+                        "lastname": customer.lastname,
+                        "address": customer.address,
+                        "phone": customer.phone,
+                        "email": customer.email,
+                        "status": 0,
+                        "promo": customer.promo}
+
+        data = json.dumps(new_customer)
+        resp = self.app.put('/customers/{}/deactivate'.format(customer.id), data=data, content_type='application/json')
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        new_json = json.loads(resp.data)
+        self.assertEqual(new_json['status'], 0)
+
     def test_delete_customer(self):
         """ Delete a Customer """
         customer = Customer.find_by_username('jf')[0]

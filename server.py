@@ -11,6 +11,8 @@ POST /customers - Creates a Customer in the datbase from the posted database
 PUT  /customers/{id} - Updates a Customer in the database fom the posted database
 DELETE /customers/{id} - Removes a Customer from the database that matches the id
 GET /customers/{promo} - Retrieves a list of Customer with the promo from the database
+PUT /customers/{id}/subscribe - Subscribe a Customer with id
+PUT /customers/{id}/deactivate - Deactivate a Customer with id
 """
 
 import os
@@ -166,6 +168,44 @@ def update_customers(id):
 
 
 ######################################################################
+# SUBSCRIBE A CUSTOMER
+######################################################################
+@app.route('/customers/<int:id>/subscribe', methods=['PUT'])
+def subscribe_customers(id):
+    """ Subscribe a Customer """
+    customer = Customer.find(id)
+    if customer:
+        customer.promo = 1;
+        customer.save()
+        return_code = HTTP_200_OK
+        message = customer.serialize()
+    else:
+        message = {'message': 'Customer with id: %s was not found' % str(id)}
+        return_code = HTTP_404_NOT_FOUND
+
+    return jsonify(message), return_code
+
+
+######################################################################
+# DEACTIVATE A CUSTOMER
+######################################################################
+@app.route('/customers/<int:id>/deactivate', methods=['PUT'])
+def deactivate_customers(id):
+    """ Subscribe a Customer """
+    customer = Customer.find(id)
+    if customer:
+        customer.status= 0;
+        customer.save()
+        return_code = HTTP_200_OK
+        message = customer.serialize()
+    else:
+        message = {'message': 'Customer with id: %s was not found' % str(id)}
+        return_code = HTTP_404_NOT_FOUND
+
+    return jsonify(message), return_code
+
+
+######################################################################
 # DELETE A CUSTOMER
 ######################################################################
 @app.route('/customers/<int:id>', methods=['DELETE'])
@@ -200,15 +240,15 @@ def init_db(redis=None):
 
 def data_load(payload):
     """ Loads a Pet into the database """
-    customer = Customer(0, 
-        payload['username'], 
-        payload['password'], 
-        payload['firstname'], 
-        payload['lastname'], 
-        payload['address'], 
-        payload['phone'], 
-        payload['email'], 
-        payload['status'], 
+    customer = Customer(0,
+        payload['username'],
+        payload['password'],
+        payload['firstname'],
+        payload['lastname'],
+        payload['address'],
+        payload['phone'],
+        payload['email'],
+        payload['status'],
         payload['promo'])
     customer.save()
 
@@ -247,4 +287,3 @@ if __name__ == "__main__":
     initialize_logging()
     init_db()
     app.run(host='0.0.0.0', port=int(PORT), debug=DEBUG)
-

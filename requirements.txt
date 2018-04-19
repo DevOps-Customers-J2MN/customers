@@ -14,3 +14,9 @@ httpie==0.9.9
 # Code coverage
 coverage==4.2
 codecov==2.0.5
+
+# BDD
+behave==1.2.5
+selenium==3.3.1
+compare==0.2b0
+requests==2.13.0

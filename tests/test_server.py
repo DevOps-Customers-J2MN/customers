@@ -175,7 +175,7 @@ class TestCustomerServer(unittest.TestCase):
         """ Delete a Customer """
         customer = Customer.find_by_username('jf')[0]
 
-        # save the current number of pets for later comparrison
+        # save the current number of customers for later comparrison
         customer_count = self.get_customer_count()
         resp = self.app.delete('/customers/{}'.format(customer.id),
                                content_type='application/json')

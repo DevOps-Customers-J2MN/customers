@@ -82,9 +82,19 @@ def internal_server_error(error):
 @app.route('/')
 def index():
     """ Return something useful by default """
-    return jsonify(name='Customer REST API Service',
-                   version='1.0',
-                   url=url_for('list_customers', _external=True)), HTTP_200_OK
+    #return jsonify(name='Customer REST API Service',
+    #               version='1.0',
+    #               url=url_for('list_customers', _external=True)), HTTP_200_OK
+    return app.send_static_file('index.html')
+
+######################################################################
+# DELETE ALL PET DATA (for testing only)
+######################################################################
+@app.route('/customers/reset', methods=['DELETE'])
+def pets_reset():
+    """ Removes all pets from the database """
+    Customer.remove_all()
+    return make_response('', status.HTTP_204_NO_CONTENT)
 
 ######################################################################
 # LIST ALL CUSTOMERS AND QUERY

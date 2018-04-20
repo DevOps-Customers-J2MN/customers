@@ -15,9 +15,9 @@ Scenario: The server is running
     Then I should see "Customer Demo RESTful Service" in the title
     And I should not see "404 Not Found"
 
-#Scenario: List all pets
-#    When I visit the "Home Page"
-#    And I press the "Search" button
-#    Then I should see "msa503" in the results
-#    And I should see "nuzz" in the results
-#    And I should see "jahn" in the results
+Scenario: List all customers
+    When I visit the "Home Page"
+    And I press the "Search" button
+    Then I should see "msa503" in the results
+    And I should see "nuzz" in the results
+    And I should see "jahn" in the results

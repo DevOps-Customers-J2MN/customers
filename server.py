@@ -88,11 +88,11 @@ def index():
     return app.send_static_file('index.html')
 
 ######################################################################
-# DELETE ALL PET DATA (for testing only)
+# DELETE ALL CUSTOMER DATA (for testing only)
 ######################################################################
 @app.route('/customers/reset', methods=['DELETE'])
-def pets_reset():
-    """ Removes all pets from the database """
+def customers_reset():
+    """ Removes all customers from the database """
     Customer.remove_all()
     return make_response('', status.HTTP_204_NO_CONTENT)
 
@@ -249,7 +249,7 @@ def init_db(redis=None):
     Customer.init_db(redis)
 
 def data_load(payload):
-    """ Loads a Pet into the database """
+    """ Loads a Customer into the database """
     customer = Customer(0,
         payload['username'],
         payload['password'],
@@ -263,7 +263,7 @@ def data_load(payload):
     customer.save()
 
 def data_reset():
-    """ Removes all Pets from the database """
+    """ Removes all Customers from the database """
     Customer.remove_all()
 
 def initialize_logging(log_level=logging.INFO):

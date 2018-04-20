@@ -131,7 +131,7 @@ class TestCustomers(unittest.TestCase):
 
         customer.save()
         self.assertEqual(len(Customer.all()), 1)
-        # delete the pet and make sure it isn't in the database
+        # delete the customer and make sure it isn't in the database
         customer.delete()
         self.assertEqual(len(Customer.all()), 0)
 
@@ -391,7 +391,7 @@ class TestCustomers(unittest.TestCase):
         self.assertRaises(DataValidationError, customer.save)
 
     def test_customer_not_found(self):
-        """ Find a Pet that doesnt exist """
+        """ Find a Customer that doesnt exist """
         Customer(0, username='jk', password='2345',
                  firstname='jahnavi', lastname='kalyani',
                  address='seattle', phone='987-456-0123',
@@ -405,7 +405,7 @@ class TestCustomers(unittest.TestCase):
         self.assertRaises(DataValidationError, customer.deserialize, None)
 
     def test_deserialize_with_bad_data(self):
-        """ Deserialize a Pet that has bad data """
+        """ Deserialize a Customer that has bad data """
         customer = Customer(0)
         self.assertRaises(DataValidationError, customer.deserialize, "string data")
 

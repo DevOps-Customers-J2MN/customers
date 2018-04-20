@@ -5,38 +5,87 @@ $(function () {
     // ****************************************
 
     // ****************************************
-    // Search for a Pet
+    // Search for a Customer
     // ****************************************
 
     $("#search-btn").click(function () {
 
-        var name = $("#pet_name").val();
-        var category = $("#pet_category").val();
-        var available = $("#pet_available").val() == "true";
+        var username = $("#customer_username").val();
+        var password = $("#customer_password").val();
+        var firstname = $("#customer_firstname").val();
+        var secondname = $("#customer_secondname").val();
+        var address = $("#customer_address").val();
+        var phone = $("$customer_phone").val();
+        var email = $("$customer_email").val();
+        var status_val = $("#customer_status").val();
+        var promo = $("#customer_promo").val();
 
         var queryString = ""
 
-        if (name) {
-            queryString += 'name=' + name
+        if (username) {
+            queryString += 'username=' + name
         }
-        if (category) {
+        if (password) {
             if (queryString.length > 0) {
-                queryString += '&category=' + category
+                queryString += '&password=' + password
             } else {
-                queryString += 'category=' + category
+                queryString += 'password=' + password
             }
         }
-        if (available) {
+        if (firstname) {
             if (queryString.length > 0) {
-                queryString += '&available=' + available
+                queryString += '&firstname=' + firstname
             } else {
-                queryString += 'available=' + available
+                queryString += 'firstname=' + firstname
+            }
+        }
+        if (lastname) {
+            if (queryString.length > 0) {
+                queryString += '&lastname=' + lastname
+            } else {
+                queryString += 'lastname=' + lastname
+            }
+        }
+        if (address) {
+            if (queryString.length > 0) {
+                queryString += '&address=' + address
+            } else {
+                queryString += 'address=' + address
+            }
+        }
+        if (phone {
+            if (queryString.length > 0) {
+                queryString += '&phone=' + phone
+            } else {
+                queryString += 'phone=' + phone
+            }
+        }
+        if (email) {
+            if (queryString.length > 0) {
+                queryString += '&email=' + email
+            } else {
+                queryString += 'email=' + email
+            }
+        }
+        if (status_val) {
+            if (queryString.length > 0) {
+                queryString += '&status=' + status_val
+            } else {
+                queryString += 'status=' + status_val
+            }
+        }
+
+        if (promo) {
+            if (queryString.length > 0) {
+                queryString += '&promo=' + promo
+            } else {
+                queryString += 'promo=' + promo
             }
         }
 
         var ajax = $.ajax({
             type: "GET",
-            url: "/pets?" + queryString,
+            url: "/customers?" + queryString,
             contentType:"application/json",
             data: ''
         })
@@ -47,13 +96,19 @@ $(function () {
             $("#search_results").append('<table class="table-striped">');
             var header = '<tr>'
             header += '<th style="width:10%">ID</th>'
-            header += '<th style="width:40%">Name</th>'
-            header += '<th style="width:40%">Category</th>'
-            header += '<th style="width:10%">Available</th></tr>'
+            header += '<th style="width:10%">UserName</th>'
+	    header += '<th style="width:10%">Password</th>'
+	    header += '<th style="width:10%">FirstName</th>'
+            header += '<th style="width:10%">LastName</th>'
+            header += '<th style="width:10%">Address</th>'
+            header += '<th style="width:10%">Phone</th>'
+            header += '<th style="width:10%">Email</th>'
+            header += '<th style="width:10%">Status</th>'
+            header += '<th style="width:10%">Promo</th></tr>'
             $("#search_results").append(header);
             for(var i = 0; i < res.length; i++) {
-                pet = res[i];
-                var row = "<tr><td>"+pet.id+"</td><td>"+pet.name+"</td><td>"+pet.category+"</td><td>"+pet.available+"</td></tr>";
+                customer = res[i];
+                var row = "<tr><td>"+customer.id+"</td><td>"+customer.username+"</td><td>"+customer.password+"</td><td>"+customer.firstname+"</td><td>"+customer.lastname+"</td><td>"+customer.address+"</td><td>"+customer.phone+"</td><td>"+customer.email+"<td></td>"+customer.status_val+"<td></td>"+customer.promo+"</td></tr>";
                 $("#search_results").append(row);
             }
 

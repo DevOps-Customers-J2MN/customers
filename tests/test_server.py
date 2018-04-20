@@ -35,8 +35,8 @@ class TestCustomerServer(unittest.TestCase):
 
     def test_index(self):
         """ Test the Home Page """
-#        resp = self.app.get('/')
-#        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        resp = self.app.get('/')
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
 #        data = json.loads(resp.data)
 #        self.assertEqual(data['name'], 'Customer REST API Service')
 

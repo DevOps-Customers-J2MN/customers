@@ -33,12 +33,12 @@ class TestCustomerServer(unittest.TestCase):
         server.data_load({"username":"jf", "password":"12345", "firstname":"jinfan", "lastname":"yang",
             "address":"nyu", "phone":"123-456-7890","email":"jy2296@nyu.edu", "status":1, "promo":0})
 
-    def test_index(self):
-        """ Test the Home Page """
-        resp = self.app.get('/')
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        data = json.loads(resp.data)
-        self.assertEqual(data['name'], 'Customer REST API Service')
+#    def test_index(self):
+#        """ Test the Home Page """
+#        resp = self.app.get('/')
+#        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+#        data = json.loads(resp.data)
+#        self.assertEqual(data['name'], 'Customer REST API Service')
 
     def test_get_customer_list(self):
         """ Get a list of Customers """

@@ -18,14 +18,8 @@ from app import server
 
 VCAP_SERVICES = os.getenv('VCAP_SERVICES', None)
 if not VCAP_SERVICES:
-    VCAP_SERVICES = {
-        'rediscloud': [
-            {'credentials': { 'password': '',
-                              'hostname': '127.0.0.1',
-                              'port': '6379'}
-            }
-        ]
-    }
+     VCAP_SERVICES = '{"rediscloud": [{"credentials": {' \
+                     '"password": "", "hostname": "127.0.0.1", "port": "6379"}}]}'
 
 
 ######################################################################
@@ -420,17 +414,12 @@ class TestCustomers(unittest.TestCase):
         customer = Customer(0)
         self.assertRaises(DataValidationError, customer.deserialize, "string data")
 
-    def test_passing_connection(self):
-        """ Pass in the Redis connection """
-        Customer.init_db(Redis(host='127.0.0.1', port=6379))
-        self.assertIsNotNone(Customer.redis)
-
     def test_passing_bad_connection(self):
         """ Pass in a bad Redis connection """
         self.assertRaises(ConnectionError, Customer.init_db, Redis(host='127.0.0.1', port=6300))
         self.assertIsNone(Customer.redis)
 
-    @patch.dict(os.environ, {'VCAP_SERVICES': json.dumps(VCAP_SERVICES)})
+    @patch.dict(os.environ, {'VCAP_SERVICES': VCAP_SERVICES})
     def test_vcap_services(self):
         """ Test if VCAP_SERVICES works """
         Customer.init_db()

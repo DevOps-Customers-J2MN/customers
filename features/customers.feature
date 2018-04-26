@@ -21,3 +21,13 @@ Scenario: List all customers
     Then I should see "msa503" in the results
     And I should see "nuzz" in the results
     And I should see "jahn" in the results
+
+Scenario: Create a Customer
+    When I visit the "Home Page"
+    And I set the "Username" to "jfy"
+    And I set the "Password" to "123456"
+    And I set the "Firstname" to "jinfan"
+    And I set the "Lastname" to "yang"
+    And I set the "Email" to "jy2296@nyu.edu"
+    And I press the "Create" button
+    Then I should see the message "Success"

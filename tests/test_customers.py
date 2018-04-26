@@ -11,27 +11,28 @@ import os
 import json
 from mock import patch
 from redis import Redis, ConnectionError
-from models import Customer, DataValidationError
-from server import app
+from werkzeug.exceptions import NotFound
+from app.models import Customer
+from app.custom_exceptions import DataValidationError
+from app import server
 
-
-VCAP_SERVICES = {
-    'rediscloud': [
-        {'credentials': {
-            'password': '',
-            'hostname': '127.0.0.1',
-            'port': '6379'
+VCAP_SERVICES = os.getenv('VCAP_SERVICES', None)
+if not VCAP_SERVICES:
+    VCAP_SERVICES = {
+        'rediscloud': [
+            {'credentials': { 'password': '',
+                              'hostname': '127.0.0.1',
+                              'port': '6379'}
             }
-        }
-    ]
-}
+        ]
+    }
 
 
 ######################################################################
 #  T E S T   C A S E S
 ######################################################################
 class TestCustomers(unittest.TestCase):
-    """ Test Cases for Customers """
+    """ Test Cases for Customer Model"""
 
     def setUp(self):
         """ Initialize the Redis database """
@@ -50,8 +51,8 @@ class TestCustomers(unittest.TestCase):
                             address='nyu',
                             phone='123-456-7890',
                             email='jy2296@nyu.edu',
-                            status=1,
-                            promo=1)
+                            active=True,
+                            promo=False)
 
         self.assertTrue(customer != None)
         self.assertEqual(customer.id, 0)
@@ -62,8 +63,8 @@ class TestCustomers(unittest.TestCase):
         self.assertEqual(customer.address, 'nyu')
         self.assertEqual(customer.phone, '123-456-7890')
         self.assertEqual(customer.email, 'jy2296@nyu.edu')
-        self.assertEqual(customer.status, 1)
-        self.assertEqual(customer.promo, 1)
+        self.assertEqual(customer.active, True)
+        self.assertEqual(customer.promo, False)
 
     def test_add_a_customer(self):
         """ Create a customer and add it to the database """
@@ -77,8 +78,8 @@ class TestCustomers(unittest.TestCase):
                             address='nyu',
                             phone='123-456-7890',
                             email='jy2296@nyu.edu',
-                            status=1,
-                            promo=1)
+                            active=True,
+                            promo=True)
 
         self.assertTrue(customer != None)
         self.assertEqual(customer.id, 0)
@@ -100,8 +101,8 @@ class TestCustomers(unittest.TestCase):
                             address='nyu',
                             phone='123-456-7890',
                             email='jy2296@nyu.edu',
-                            status=1,
-                            promo=1)
+                            active=True,
+                            promo=False)
 
         customer.save()
         self.assertEqual(customer.id, 1)
@@ -126,8 +127,8 @@ class TestCustomers(unittest.TestCase):
                             address='nyu',
                             phone='123-456-7890',
                             email='jy2296@nyu.edu',
-                            status=1,
-                            promo=1)
+                            active=True,
+                            promo=False)
 
         customer.save()
         self.assertEqual(len(Customer.all()), 1)
@@ -144,8 +145,8 @@ class TestCustomers(unittest.TestCase):
                             address='nyu',
                             phone='123-456-7890',
                             email='jy2296@nyu.edu',
-                            status=1,
-                            promo=1)
+                            active=True,
+                            promo=False)
 
         data = customer.serialize()
 
@@ -166,10 +167,10 @@ class TestCustomers(unittest.TestCase):
         self.assertEqual(data['phone'], "123-456-7890")
         self.assertIn('email', data)
         self.assertEqual(data['email'], "jy2296@nyu.edu")
-        self.assertIn('status', data)
-        self.assertEqual(data['status'], 1)
+        self.assertIn('active', data)
+        self.assertEqual(data['active'], True)
         self.assertIn('promo', data)
-        self.assertEqual(data['promo'], 1)
+        self.assertEqual(data['promo'], False)
 
     def test_deserialize_a_customer(self):
         """ Test deserialization of a Customer """
@@ -181,8 +182,8 @@ class TestCustomers(unittest.TestCase):
                 "address": "nyu",
                 "phone": "123-456-7890",
                 "email": "jy2296@nyu.edu",
-                "status": 1,
-                "promo": 1}
+                "active": True,
+                "promo": True}
 
         customer = Customer()
         customer.deserialize(data)
@@ -196,8 +197,8 @@ class TestCustomers(unittest.TestCase):
         self.assertEqual(customer.address, "nyu")
         self.assertEqual(customer.phone, "123-456-7890")
         self.assertEqual(customer.email, "jy2296@nyu.edu")
-        self.assertEqual(customer.status, 1)
-        self.assertEqual(customer.promo, 1)
+        self.assertEqual(customer.active, True)
+        self.assertEqual(customer.promo, True)
 
     def test_find_customer(self):
         """ Find a Customer by ID """
@@ -208,8 +209,8 @@ class TestCustomers(unittest.TestCase):
                              address='nyu',
                              phone='123-456-7890',
                              email='jy2296@nyu.edu',
-                             status=1,
-                             promo=1)
+                             active=True,
+                             promo=True)
         customer1.save()
 
         customer2 = Customer(username='ms',
@@ -219,8 +220,8 @@ class TestCustomers(unittest.TestCase):
                              address='nyu',
                              phone='123-456-7890',
                              email='marysue@gmail.com',
-                             status=0,
-                             promo=0)
+                             active=True,
+                             promo=False)
         customer2.save()
 
         customers = Customer.all()
@@ -235,20 +236,20 @@ class TestCustomers(unittest.TestCase):
         self.assertEqual(thecustomer.address, "nyu")
         self.assertEqual(thecustomer.phone, "123-456-7890")
         self.assertEqual(thecustomer.email, "marysue@gmail.com")
-        self.assertEqual(thecustomer.status, 0)
-        self.assertEqual(thecustomer.promo, 0)
+        self.assertEqual(thecustomer.active, True)
+        self.assertEqual(thecustomer.promo, False)
 
     def test_find_by_username(self):
         """ Find a Customer by username """
         Customer(username='jf', password='12345',
                  firstname='jinfan', lastname='yang',
                  address='nyu', phone='123-456-7890',
-                 email='jy2296@nyu.edu', status=1, promo=1).save()
+                 email='jy2296@nyu.edu', active=True, promo=False).save()
 
         Customer(username='ms', password='11111',
                  firstname='mary', lastname='sue',
                  address='nyu', phone='123-456-7890',
-                 email='marysue@gmail.com', status=0, promo=0).save()
+                 email='marysue@gmail.com', active=True, promo=True).save()
 
         customers = Customer.find_by_username("jf")
 
@@ -259,20 +260,20 @@ class TestCustomers(unittest.TestCase):
         self.assertEqual(customers[0].address, "nyu")
         self.assertEqual(customers[0].phone, "123-456-7890")
         self.assertEqual(customers[0].email, "jy2296@nyu.edu")
-        self.assertEqual(customers[0].status, 1)
-        self.assertEqual(customers[0].promo, 1)
+        self.assertEqual(customers[0].active, True)
+        self.assertEqual(customers[0].promo, False)
 
     def test_find_by_email(self):
         """ Find a Customer by email """
         Customer(username='jf', password='12345',
                  firstname='jinfan', lastname='yang',
                  address='nyu', phone='123-456-7890',
-                 email='jy2296@nyu.edu', status=1, promo=1).save()
+                 email='jy2296@nyu.edu', active=True, promo=False).save()
 
         Customer(username='ms', password='11111',
                  firstname='mary', lastname='sue',
                  address='nyu', phone='123-456-7890',
-                 email='marysue@gmail.com', status=0, promo=1).save()
+                 email='marysue@gmail.com', active=True, promo=True).save()
 
         customers = Customer.find_by_email("jy2296@nyu.edu")
 
@@ -283,22 +284,22 @@ class TestCustomers(unittest.TestCase):
         self.assertEqual(customers[0].address, "nyu")
         self.assertEqual(customers[0].phone, "123-456-7890")
         self.assertEqual(customers[0].email, "jy2296@nyu.edu")
-        self.assertEqual(customers[0].status, 1)
-        self.assertEqual(customers[0].promo, 1)
+        self.assertEqual(customers[0].active, True)
+        self.assertEqual(customers[0].promo, False)
 
-    def test_find_by_status(self):
-        """ Find Customers by status """
+    def test_find_by_active(self):
+        """ Find Customers by active status """
         Customer(username='jf', password='12345',
                  firstname='jinfan', lastname='yang',
                  address='nyu', phone='123-456-7890',
-                 email='jy2296@nyu.edu', status=1, promo=1).save()
+                 email='jy2296@nyu.edu', active=True, promo=False).save()
 
         Customer(username='ms', password='11111',
                  firstname='mary', lastname='sue',
                  address='nyu', phone='123-456-7890',
-                 email='marysue@gmail.com', status=0, promo=1).save()
+                 email='marysue@gmail.com', active=False, promo=True).save()
 
-        customers = Customer.find_by_status(1)
+        customers = Customer.find_by_active(True)
 
         self.assertEqual(customers[0].username, "jf")
         self.assertEqual(customers[0].password, "12345")
@@ -307,95 +308,105 @@ class TestCustomers(unittest.TestCase):
         self.assertEqual(customers[0].address, "nyu")
         self.assertEqual(customers[0].phone, "123-456-7890")
         self.assertEqual(customers[0].email, "jy2296@nyu.edu")
-        self.assertEqual(customers[0].status, 1)
-        self.assertEqual(customers[0].promo, 1)
+        self.assertEqual(customers[0].active, True)
+        self.assertEqual(customers[0].promo, False)
 
     def test_find_by_promo(self):
         """ Find Customers by promo """
         Customer(username='jf', password='12345',
                  firstname='jinfan', lastname='yang',
                  address='nyu', phone='123-456-7890',
-                 email='jy2296@nyu.edu', status=1, promo=1).save()
+                 email='jy2296@nyu.edu', active=True, promo=False).save()
 
         Customer(username='ms', password='11111',
                  firstname='mary', lastname='sue',
                  address='nyu', phone='123-456-7890',
-                 email='marysue@gmail.com', status=0, promo=0).save()
+                 email='marysue@gmail.com', active=False, promo=True).save()
 
-        customers = Customer.find_by_promo(1)
+        customers = Customer.find_by_promo(True)
 
-        self.assertEqual(customers[0].username, "jf")
-        self.assertEqual(customers[0].password, "12345")
-        self.assertEqual(customers[0].firstname, "jinfan")
-        self.assertEqual(customers[0].lastname, "yang")
+        self.assertEqual(customers[0].username, "ms")
+        self.assertEqual(customers[0].password, "11111")
+        self.assertEqual(customers[0].firstname, "mary")
+        self.assertEqual(customers[0].lastname, "sue")
         self.assertEqual(customers[0].address, "nyu")
         self.assertEqual(customers[0].phone, "123-456-7890")
-        self.assertEqual(customers[0].email, "jy2296@nyu.edu")
-        self.assertEqual(customers[0].status, 1)
-        self.assertEqual(customers[0].promo, 1)
+        self.assertEqual(customers[0].email, "marysue@gmail.com")
+        self.assertEqual(customers[0].active, False)
+        self.assertEqual(customers[0].promo, True)
 
     def test_save_customer_with_no_username(self):
         """ Save a Customer with no username """
         customer = Customer(0, password='2345',
                  firstname='jahnavi', lastname='kalyani',
                  address='seattle', phone='987-456-0123',
-                 email='jk5667@nyu.edu', status=1, promo=0)
+                 email='jk5667@nyu.edu', active=True, promo=False)
         self.assertRaises(DataValidationError, customer.save)
 
     def test_save_customer_with_no_password(self):
         """ Save a Customer with no password """
-        customer = Customer(0, username='jk', firstname='jahnavi', 
-                 lastname='kalyani', address='seattle', 
-                 phone='987-456-0123', email='jk5667@nyu.edu', 
-                 status=1, promo=0)
+        customer = Customer(0, username='jk', firstname='jahnavi',
+                 lastname='kalyani', address='seattle',
+                 phone='987-456-0123', email='jk5667@nyu.edu',
+                 active=True, promo=False)
         self.assertRaises(DataValidationError, customer.save)
 
     def test_save_customer_with_no_firstname(self):
         """ Save a Customer with no firstname """
         customer = Customer(0, username='jk', password='2345',
-                 lastname='kalyani', address='seattle', 
-                 phone='987-456-0123', email='jk5667@nyu.edu', 
-                 status=1, promo=0)
+                 lastname='kalyani', address='seattle',
+                 phone='987-456-0123', email='jk5667@nyu.edu',
+                 active=True, promo=False)
         self.assertRaises(DataValidationError, customer.save)
 
     def test_save_customer_with_no_lastname(self):
         """ Save a Customer with no lastname """
         customer = Customer(0, username='jk', password='2345',
-                 firstname='jahnavi', address='seattle', 
-                 phone='987-456-0123', email='jk5667@nyu.edu', 
-                 status=1, promo=0)
+                 firstname='jahnavi', address='seattle',
+                 phone='987-456-0123', email='jk5667@nyu.edu',
+                 active=True, promo=False)
         self.assertRaises(DataValidationError, customer.save)
 
     def test_save_customer_with_no_email(self):
         """ Save a Customer with no email """
         customer = Customer(0, username='jk', password='2345',
-                 firstname='jahnavi', lastname='kalyani', 
-                 address='seattle', phone='987-456-0123', 
-                 status=1, promo=0)
+                 firstname='jahnavi', lastname='kalyani',
+                 address='seattle', phone='987-456-0123',
+                 active=True, promo=False)
         self.assertRaises(DataValidationError, customer.save)
 
-    def test_save_customer_with_no_status(self):
-        """ Save a Customer with no status """
+    def test_save_customer_with_no_active(self):
+        """ Save a Customer with no active status """
         customer = Customer(0, username='jk', password='2345',
-                 firstname='jahnavi', lastname='kalyani', 
-                 address='seattle', phone='987-456-0123', 
-                 email='jk5667@nyu.edu', promo=0)
-        self.assertRaises(DataValidationError, customer.save)
+                 firstname='jahnavi', lastname='kalyani',
+                 address='seattle', phone='987-456-0123',
+                 email='jk5667@nyu.edu', promo=False)
+        customer.save()
+
+        thecustomer = Customer.find(customer.id)
+        self.assertIsNot(thecustomer, None)
+        self.assertEqual(thecustomer.id, customer.id)
+        self.assertEqual(thecustomer.active, True)
 
     def test_save_customer_with_no_promo(self):
-        """ Save a Customer with no status """
+        """ Save a Customer with no promo status """
         customer = Customer(0, username='jk', password='2345',
-                 firstname='jahnavi', lastname='kalyani', 
-                 address='seattle', phone='987-456-0123', 
-                 email='jk5667@nyu.edu', status=0)
-        self.assertRaises(DataValidationError, customer.save)
+                 firstname='jahnavi', lastname='kalyani',
+                 address='seattle', phone='987-456-0123',
+                 email='jk5667@nyu.edu', active=True)
+        customer.save()
+
+        thecustomer = Customer.find(customer.id)
+        self.assertIsNot(thecustomer, None)
+        self.assertEqual(thecustomer.id, customer.id)
+        self.assertEqual(thecustomer.promo, False)
 
     def test_customer_not_found(self):
         """ Find a Customer that doesnt exist """
         Customer(0, username='jk', password='2345',
                  firstname='jahnavi', lastname='kalyani',
                  address='seattle', phone='987-456-0123',
-                 email='jk5667@nyu.edu', status=1, promo=0).save()
+                 email='jk5667@nyu.edu', active=True, promo=False).save()
         customer = Customer.find(2)
         self.assertIs(customer, None)
 

@@ -17,8 +17,8 @@ last name (string) - the last name of the customer
 address (string) - the address of the customer
 phone (string) - the phone of the customer
 email (string) - the email of the customer
-status (int) - the status of the customer account (0: inactive, 1: active)
-promo (int) - the subscription status of the customer (0: no subscribe, 1: subscribe)
+active (boolean) - the status of the customer account
+promo (boolean) - the subscription status of the customer
 """
 
 import os
@@ -27,10 +27,16 @@ import json
 import pickle
 from redis import Redis
 from redis.exceptions import ConnectionError
+from app.custom_exceptions import DataValidationError
 
-class DataValidationError(Exception):
-    """ Custom Exception with data validation fails """
-    pass
+# Validator allow to creat a schema
+from cerberus import Validator
+
+######################################################################
+# Customer Model for database
+#   This class must be initialized with use_db(redis) before using
+#   where redis is a value connection to a Redis database
+######################################################################
 
 class Customer(object):
     """ Customer interface to database """
@@ -38,7 +44,21 @@ class Customer(object):
     logger = logging.getLogger(__name__)
     redis = None
 
-    def __init__(self, id=0, username=None, password=None, firstname=None, lastname=None, address=None, phone=None, email=None, status=None, promo=None):
+    schema = {
+        'id': {'type': 'integer'},
+        'username': {'type': 'string', 'required': True},
+        'password': {'type': 'string', 'required': True},
+        'firstname': {'type': 'string', 'required': True},
+        'lastname': {'type': 'string', 'required': True},
+        'address': {'type': 'string'},
+        'phone': {'type': 'string'},
+        'email': {'type': 'string', 'required': True},
+        'active': {'type': 'boolean', 'required': True},
+        'promo': {'type': 'boolean', 'required': True}
+    }
+    __validator = Validator(schema)
+
+    def __init__(self, id=0, username=None, password=None, firstname=None, lastname=None, address=None, phone=None, email=None, active=True, promo=False):
         """ Constructor """
         self.id = int(id)
         self.username = username
@@ -48,7 +68,7 @@ class Customer(object):
         self.address = address
         self.phone = phone
         self.email = email
-        self.status = status
+        self.active = active
         self.promo = promo
 
     def __repr__(self):
@@ -66,10 +86,6 @@ class Customer(object):
             raise DataValidationError('lastname is not set')
         if self.email is None:
             raise DataValidationError('email is not set')
-        if self.status is None:
-            raise DataValidationError('status is not set')
-        if self.promo is None:
-            raise DataValidationError('promo is not set')
         if self.id == 0:
             self.id = Customer.__next_index()
         Customer.redis.set(self.id, pickle.dumps(self.serialize()))
@@ -89,15 +105,13 @@ class Customer(object):
             "address": self.address,
             "phone": self.phone,
             "email": self.email,
-            "status": self.status,
+            "active": self.active,
             "promo": self.promo
         }
 
     def deserialize(self, data):
         """ Deserializes a Customer by marshalling the data """
-        if not isinstance(data, dict):
-            raise DataValidationError('Invalid customer: body of request contained bad or no data')
-        try:
+        if isinstance(data, dict) and Customer.__validator.validate(data):
             self.username = data['username']
             self.password = data['password']
             self.firstname = data['firstname']
@@ -105,14 +119,13 @@ class Customer(object):
             self.address = data['address']
             self.phone = data['phone']
             self.email = data['email']
-            self.status = data['status']
+            self.active = data['active']
             self.promo = data['promo']
-        except KeyError as error:
-            raise DataValidationError('Invalid customer: missing ' + error.args[0])
-        except TypeError as error:
-            raise DataValidationError('Invalid customer: body of request contained' \
-                                      'bad or no data')
+        else:
+            raise DataValidationError('Invalid customer data: ' + str(Customer.__validator.errors))
+
         return self
+
 
 ######################################################################
 #  S T A T I C   D A T A B S E   M E T H O D S
@@ -141,7 +154,6 @@ class Customer(object):
         return results
 
 
-
 ######################################################################
 #  F I N D E R   M E T H O D S
 ######################################################################
@@ -163,6 +175,7 @@ class Customer(object):
             search_criteria = value.lower() # make case insensitive
         else:
             search_criteria = value
+
         results = []
         for key in Customer.redis.keys():
             if key != 'index':  # filer out our id index
@@ -172,14 +185,10 @@ class Customer(object):
                     test_value = data[attribute].lower()
                 else:
                     test_value = data[attribute]
+
                 if test_value == search_criteria:
                     results.append(Customer(data['id']).deserialize(data))
         return results
-
-    @staticmethod
-    def find_or_404(customer_id):
-        """ Find a Customer by it's ID """
-        return Customer.__find_by('id', customer_id)
 
     @staticmethod
     def find_by_username(username):
@@ -201,14 +210,15 @@ class Customer(object):
         return Customer.__find_by('email', email)
 
     @staticmethod
-    def find_by_status(status):
+    def find_by_active(active):
         """
         Returns all of Customers by their status
 
         Args:
             status (int): the status of the Customers you want to match
         """
-        return Customer.__find_by('status', status)
+        active = bool(active)
+        return Customer.__find_by('active', active)
 
     @staticmethod
     def find_by_promo(promo):
@@ -218,6 +228,7 @@ class Customer(object):
         Args:
             promo (int): the status of the Customers you want to match
         """
+        promo = bool(promo)
         return Customer.__find_by('promo', promo)
 
 
@@ -237,7 +248,6 @@ class Customer(object):
             Customer.logger.info("Connection Error from: %s:%s", hostname, port)
             Customer.redis = None
         return Customer.redis
-
 
     @staticmethod
     def init_db(redis=None):

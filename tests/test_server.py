@@ -11,9 +11,10 @@ import os
 import unittest
 import logging
 import json
-import server
+from app import server
 from flask_api import status
-from models import Customer, DataValidationError
+from app.models import Customer
+from app.custom_exceptions import DataValidationError
 from mock import MagicMock, patch
 
 
@@ -21,7 +22,7 @@ from mock import MagicMock, patch
 #  T E S T   C A S E S
 ######################################################################
 class TestCustomerServer(unittest.TestCase):
-    """ Customer Server Tests """
+    """ Test Cases for Customer Server """
 
     def setUp(self):
         self.app = server.app.test_client()
@@ -29,16 +30,22 @@ class TestCustomerServer(unittest.TestCase):
         server.init_db()
         server.data_reset()
         server.data_load({"username":"MeenakshiSundaram", "password":"123", "firstname":"Meenakshi", "lastname":"Sundaram",
-            "address":"Jersey City", "phone":"2016604601","email":"msa503@nyu.edu", "status":1, "promo":1})
+            "address":"Jersey City", "phone":"2016604601","email":"msa503@nyu.edu", "active":True, "promo":True})
         server.data_load({"username":"jf", "password":"12345", "firstname":"jinfan", "lastname":"yang",
-            "address":"nyu", "phone":"123-456-7890","email":"jy2296@nyu.edu", "status":1, "promo":0})
+            "address":"nyu", "phone":"123-456-7890","email":"jy2296@nyu.edu", "active":True, "promo":False})
+
+
+    def test_healthcheck(self):
+        """ Test if service is running """
+        resp = self.app.get('/healthcheck')
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = json.loads(resp.data)
+        self.assertEqual(data['message'], "Healthy")
 
     def test_index(self):
         """ Test the Home Page """
         resp = self.app.get('/')
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-#        data = json.loads(resp.data)
-#        self.assertEqual(data['name'], 'Customer REST API Service')
 
     def test_get_customer_list(self):
         """ Get a list of Customers """
@@ -47,22 +54,40 @@ class TestCustomerServer(unittest.TestCase):
         data = json.loads(resp.data)
         self.assertEqual(len(data), 2)
 
-    def test_get_customer_promo_list(self):
-        """ Get a list of Customers with promo"""
-        customer = Customer.find_by_promo(1)
-        resp = self.app.get('/customers/promo/1')
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        data = json.loads(resp.data)
-        self.assertTrue(len(data) > 0)
-
     def test_get_customer_by_username(self):
         """ Get customer by username """
         customer = Customer.find_by_username('jf')[0]
         resp = self.app.get('/customers?username=jf')
         data = json.loads(resp.data)
-        self.assertEqual(data['username'], customer.username)
-        self.assertEqual(data['id'], customer.id)
+        self.assertEqual(data[0]['username'], customer.username)
+        self.assertEqual(data[0]['id'], customer.id)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+    def test_get_customer_by_email(self):
+        """ Get customer by email """
+        customer = Customer.find_by_email('jy2296@nyu.edu')[0]
+        resp = self.app.get('/customers?email=jy2296@nyu.edu')
+        data = json.loads(resp.data)
+        self.assertEqual(data[0]['id'], customer.id)
+        self.assertEqual(data[0]['email'], customer.email)
+        self.assertEqual(data[0]['username'], customer.username)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+    def test_get_customer_promo_list(self):
+        """ Get a list of Customers with given promo status """
+        customer = Customer.find_by_promo(True)
+        resp = self.app.get('/customers?promo=true')
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = json.loads(resp.data)
+        self.assertTrue(len(data) == 1)
+
+    def test_get_customer_active_list(self):
+        """ Get a list of Customers with given active status """
+        customer = Customer.find_by_active(True)
+        resp = self.app.get('/customers?active=true')
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = json.loads(resp.data)
+        self.assertTrue(len(data) == 2)
 
     def test_get_customer(self):
         """ Get a single Customer """
@@ -73,11 +98,6 @@ class TestCustomerServer(unittest.TestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = json.loads(resp.data)
         self.assertEqual(data['username'], customer.username)
-
-    def test_get_customer_not_found(self):
-        """ Get a Customer thats not found """
-        resp = self.app.get('/customers/0')
-        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_create_customer(self):
         """ Create a new Customer """
@@ -92,8 +112,8 @@ class TestCustomerServer(unittest.TestCase):
                         "address": "nyu",
                         "phone": "123-456-7890",
                         "email": "marysue@gmail.com",
-                        "status": 0,
-                        "promo": 1}
+                        "active": True,
+                        "promo": False}
 
         data = json.dumps(new_customer)
         resp = self.app.post('/customers', data=data, content_type='application/json')
@@ -124,14 +144,14 @@ class TestCustomerServer(unittest.TestCase):
                         "address": "nyu",
                         "phone": "123-456-7890",
                         "email": "jy2296@nyu.edu",
-                        "status": 0,
-                        "promo": 1}
+                        "active": False,
+                        "promo": False}
 
         data = json.dumps(new_customer)
         resp = self.app.put('/customers/{}'.format(customer.id), data=data, content_type='application/json')
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         new_json = json.loads(resp.data)
-        self.assertEqual(new_json['status'], 0)
+        self.assertEqual(new_json['active'], False)
 
     def test_subscribe_customer(self):
         """ Subscribe an existing Customer"""
@@ -143,14 +163,14 @@ class TestCustomerServer(unittest.TestCase):
                         "address": customer.address,
                         "phone": customer.phone,
                         "email": customer.email,
-                        "status": customer.status,
-                        "promo": 1}
+                        "active": customer.active,
+                        "promo": True}
 
         data = json.dumps(new_customer)
         resp = self.app.put('/customers/{}/subscribe'.format(customer.id), data=data, content_type='application/json')
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         new_json = json.loads(resp.data)
-        self.assertEqual(new_json['promo'], 1)
+        self.assertEqual(new_json['promo'], True)
 
     def test_deactivate_customer(self):
         """ Deactivate an existing Customer"""
@@ -162,14 +182,14 @@ class TestCustomerServer(unittest.TestCase):
                         "address": customer.address,
                         "phone": customer.phone,
                         "email": customer.email,
-                        "status": 0,
+                        "active": False,
                         "promo": customer.promo}
 
         data = json.dumps(new_customer)
         resp = self.app.put('/customers/{}/deactivate'.format(customer.id), data=data, content_type='application/json')
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         new_json = json.loads(resp.data)
-        self.assertEqual(new_json['status'], 0)
+        self.assertEqual(new_json['active'], False)
 
     def test_delete_customer(self):
         """ Delete a Customer """
@@ -189,9 +209,9 @@ class TestCustomerServer(unittest.TestCase):
         rv = self.app.get('/4444')
         self.assertEqual(rv.status_code, 404)
 
-    def test_get_nonexisting_customer(self):
-        """ Get a nonexisting Customer """
-        resp = self.app.get('/customers/5')
+    def test_get_customer_not_found(self):
+        """ Get a Customer thats not found """
+        resp = self.app.get('/customers/0')
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_call_create_with_an_id(self):
@@ -203,8 +223,8 @@ class TestCustomerServer(unittest.TestCase):
                         "address": "raleigh",
                         "phone": "632-262-6362",
                         "email": "jk1378@nyu.edu",
-                        "status": 1,
-                        "promo": 0}
+                        "active": True,
+                        "promo": False}
         data = json.dumps(new_customer)
         resp = self.app.post('/customers/1', data=data)
         self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
@@ -225,24 +245,25 @@ class TestCustomerServer(unittest.TestCase):
                         "address": "nyu",
                         "phone": "123-456-7890",
                         "email": "jy2296@nyu.edu",
-                        "status": 0,
-                        "promo": 1}
+                        "active": False,
+                        "promo": False}
 
         data = json.dumps(new_customer)
         resp = self.app.put('/customers/1000000', data=data, content_type='application/json')
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_not_found_get_customer_by_username(self):
-        """ Test a Not Found error from Find By UserId """
+        """ Test a Not Found error from Find By Username """
         #not_found_mock.side_effect = server.HTTP_404_NOT_FOUND
         resp = self.app.get('/customers?username=IDONOTEXIST')
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_method_not_allowed_customer_email_search(self):
-        """ Test a Method not Supported error from Customer Search """
+    def test_not_found_get_customer_by_email(self):
+        """ Test a Not Found error from Find By Email """
         #not_found_mock.side_effect = server.HTTP_404_NOT_FOUND
-        resp = self.app.get('/customers?email=amnot@right.com')
-        self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        resp = self.app.get('/customers?email=IDONOTEXIST')
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
 
 ######################################################################
 # Utility functions

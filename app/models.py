@@ -217,7 +217,6 @@ class Customer(object):
         Args:
             status (int): the status of the Customers you want to match
         """
-        active = bool(active)
         return Customer.__find_by('active', active)
 
     @staticmethod
@@ -228,7 +227,6 @@ class Customer(object):
         Args:
             promo (int): the status of the Customers you want to match
         """
-        promo = bool(promo)
         return Customer.__find_by('promo', promo)
 
 

@@ -61,8 +61,8 @@ def list_customers():
     customers = []
     username = request.args.get('username')
     email = request.args.get('email')
-    promo = request.args.get('promo')
-    active = request.args.get('active')
+    promos = request.args.get('promo')
+    actives = request.args.get('active')
 
     if username:
         customers = Customer.find_by_username(username)
@@ -72,11 +72,25 @@ def list_customers():
         customers = Customer.find_by_email(email)
         if not customers:
             raise NotFound("Customer with email '{}' was not found.".format(email))
-    elif promo:
+    elif promos:
+        promos = promos.lower()
+        if promos == 'true':
+            promo = True
+        elif promos == 'false':
+            promo = False
+        else:
+            raise ValueError
         customers = Customer.find_by_promo(promo)
         if not customers:
             raise NotFound("Customer with promotion status '{}' was not found.".format(promo))
-    elif active:
+    elif actives:
+        actives = actives.lower()
+        if actives == 'true':
+            active = True
+        elif actives == 'false':
+            active = False
+        else:
+            raise ValueError
         customers = Customer.find_by_active(active)
         if not customers:
             raise NotFound("Customer with active status '{}' was not found.".format(active))

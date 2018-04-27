@@ -23,7 +23,7 @@ Then all you have to do is clone this repo and invoke vagrant:
     vagrant ssh
     cd /vagrant
 
-You can now run `python server.py` to start the server
+You can now run `python run.py` to start the server
 
 When you are done, you can exit and shut down the vm with:
 

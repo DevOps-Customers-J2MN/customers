@@ -57,6 +57,6 @@ You can also manually run `nosetests` with `coverage` (but `setup.cfg` does this
 ## What's featured in the project?
 
     * server.py -- the main Service using Python Flask
-    * models.py -- the data model using SQLAlchemy
+    * models.py -- the data model using Redis
     * tests/test_server.py -- test cases against the service
     * tests/test_customers.py -- test cases against the Customer model

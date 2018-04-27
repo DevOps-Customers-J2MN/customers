@@ -74,20 +74,35 @@ class TestCustomerServer(unittest.TestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
     def test_get_customer_promo_list(self):
-        """ Get a list of Customers with given promo status """
+        """ Get a list of Customers with given promo status TRUE """
         customer = Customer.find_by_promo(True)
         resp = self.app.get('/customers?promo=true')
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = json.loads(resp.data)
         self.assertTrue(len(data) == 1)
 
+    def test_get_customer_promo_list_2(self):
+        """ Get a list of Customers with given promo status FALSE """
+        customer = Customer.find_by_promo(False)
+        resp = self.app.get('/customers?promo=false')
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = json.loads(resp.data)
+        self.assertTrue(len(data) == 1)
+
     def test_get_customer_active_list(self):
-        """ Get a list of Customers with given active status """
+        """ Get a list of Customers with given active status TRUE """
         customer = Customer.find_by_active(True)
         resp = self.app.get('/customers?active=true')
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = json.loads(resp.data)
         self.assertTrue(len(data) == 2)
+
+    def test_get_customer_active_list_2(self):
+        """ Get a list of Customers with given active status FALSE """
+        customer = Customer.find_by_active(False)
+        self.assertTrue(len(customer) == 0)
+        resp = self.app.get('/customers?active=false')
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_get_customer(self):
         """ Get a single Customer """

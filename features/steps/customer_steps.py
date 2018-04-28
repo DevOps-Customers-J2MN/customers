@@ -31,8 +31,8 @@ def step_impl(context):
             "address": row['address'],
             "phone": row['phone'],
             "email": row['email'],
-            "active": row['active'] in ['1', '0'],
-            "promo": row['promo'] in ['1', '0']
+            "active": row['active'] in ['True','False','true','false'],
+            "promo": row['promo'] in ['True','False','true','false']
             }
         payload = json.dumps(data)
         context.resp = requests.post(create_url, data=payload, headers=headers)

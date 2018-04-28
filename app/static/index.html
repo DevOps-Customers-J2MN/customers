@@ -82,11 +82,11 @@
                 </div>
               </div>
               <div class="form-group">
-                <label class="control-label col-sm-2" for="customer_status">Status:</label>
+                <label class="control-label col-sm-2" for="customer_active">Active:</label>
                 <div class="col-sm-10">
-                  <select class="form-control" id="customer_status">
-                      <option value="0">No</option>
-                      <option value="1">Yes</option>
+                  <select class="form-control" id="customer_active">
+                      <option value="false">false</option>
+                      <option value="true" selected>true</option>
                   </select>
                 </div>
               </div>
@@ -94,8 +94,8 @@
                 <label class="control-label col-sm-2" for="customer_promo">Promo:</label>
                 <div class="col-sm-10">
                   <select class="form-control" id="customer_promo">
-                      <option value="0">No</option>
-                      <option value="1">Yes</option>
+                      <option value="false" selected>false</option>
+                      <option value="true">true</option>
                   </select>
                 </div>
               </div>
@@ -123,7 +123,7 @@
                 <th class="col-md-1">Address</th>
                 <th class="col-md-1">PhoneNumber</th>
                 <th class="col-md-1">Email</th>
-                <th class="col-md-1">Status</th>
+                <th class="col-md-1">Active</th>
                 <th class="col-md-1">Promo</th>
             </tr>
             </thead>

@@ -5,10 +5,10 @@ Feature: The customer service back-end
 
 Background:
     Given the following customers
-        | id | username       | password | firstname | lastname | address         | phone      | email          | active | promo |
-        |  1 | msa503         | 503msa   | Meenakshi | Arumugam | Jersey City, NJ | 2016604601 | msa503@nyu.edu | 1      | 1     |
-        |  2 | nuzz           | nuzzbash | Nusrath   | Basheer  | New York, NY    | 2013014018 | nuzz@nyu.edu   | 0      | 1     |
-        |  3 | jahn           | jk56     | Jahnavi   | Kalyani  | Jersey City, NJ | 2015016019 | jk@nyu.edu     | 1      | 0     |
+        | id | username       | password | firstname | lastname | address         | phone      | email          | active    | promo    |
+        |  1 | msa503         | 503msa   | Meenakshi | Arumugam | Jersey City, NJ | 2016604601 | msa503@nyu.edu | True      | True     |
+        |  2 | nuzz           | nuzzbash | Nusrath   | Basheer  | New York, NY    | 2013014018 | nuzz@nyu.edu   | False     | True     |
+        |  3 | jahn           | jk56     | Jahnavi   | Kalyani  | Jersey City, NJ | 2015016019 | jk@nyu.edu     | True      | False    |
 
 Scenario: The server is running
     When I visit the "Home Page"

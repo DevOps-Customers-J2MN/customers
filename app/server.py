@@ -15,66 +15,35 @@ PUT /customers/{id}/subscribe - Subscribe a Customer with id
 PUT /customers/{id}/deactivate - Deactivate a Customer with id
 """
 
-import os
 import sys
 import logging
-from flask import Flask, Response, jsonify, request, json, url_for, make_response
+from flask import Flask, Response, jsonify, request, json, url_for, make_response, abort
 from flask_api import status    # HTTP Status Codes
+from werkzeug.exceptions import NotFound
+from app.models import Customer
+from . import app
 
-from models import Customer, DataValidationError
+#from models import Customer, DataValidationError
 
 # Create Flask application
-app = Flask(__name__)
-app.config['LOGGING_LEVEL'] = logging.INFO
+#app = Flask(__name__)
+#app.config['LOGGING_LEVEL'] = logging.INFO
 
 # Pull options from environment
-DEBUG = (os.getenv('DEBUG', 'False') == 'True')
-PORT = os.getenv('PORT', '5000')
+#DEBUG = (os.getenv('DEBUG', 'False') == 'True')
+#PORT = os.getenv('PORT', '5000')
 
-# Status Codes
-HTTP_200_OK = 200
-HTTP_201_CREATED = 201
-HTTP_204_NO_CONTENT = 204
-HTTP_400_BAD_REQUEST = 400
-HTTP_404_NOT_FOUND = 404
-HTTP_405_METHOD_NOT_ALLOWED = 405
-HTTP_409_CONFLICT = 409
+# Error handlers reuire app to be initialized so we must import
+# then only after we have initialized the Flask app instance
+import error_handlers
 
 ######################################################################
-# Error Handlers
+# GET HEALTH CHECK
 ######################################################################
-@app.errorhandler(DataValidationError)
-def request_validation_error(error):
-    """ Handles all data validation issues from the model """
-    return bad_request(error)
-
-@app.errorhandler(400)
-def bad_request(error):
-    """ Handles requests that have bad or malformed data """
-    return jsonify(status=400, error='Bad Request', message=error.message), 400
-
-@app.errorhandler(404)
-def not_found(error):
-    """ Handles Customers that cannot be found """
-    return jsonify(status=404, error='Not Found', message=error.message), 404
-
-@app.errorhandler(405)
-def method_not_supported(error):
-    """ Handles bad method calls """
-    return jsonify(status=405, error='Method not Allowed', message=error.message), 405
-
-@app.errorhandler(415)
-def mediatype_not_supported(error):
-    """ Handles unsuppoted media requests with 415_UNSUPPORTED_MEDIA_TYPE """
-    message = error.message or str(error)
-    app.logger.info(message)
-    return jsonify(status=415, error='Unsupported media type', message=message), 415
-
-@app.errorhandler(500)
-def internal_server_error(error):
-    """ Handles catostrophic errors """
-    return jsonify(status=500, error='Internal Server Error', message=error.message), 500
-
+@app.route('/healthcheck')
+def healthcheck():
+    """ Let them know our heart is still beating """
+    return make_response(jsonify(status=200, message='Healthy'), status.HTTP_200_OK)
 
 ######################################################################
 # GET INDEX
@@ -104,10 +73,12 @@ def list_customers():
     """ Retrieves a list of customers from the database or query username"""
     arguments = len(request.args)
     print(arguments)
-    results = []
     if arguments==0:
-        results = Customer.all()
-        return jsonify([customer.serialize() for customer in results]), HTTP_200_OK
+        customers = Customer.all()
+        results = [customer.serialize() for customer in customers]
+        return make_response(jsonify(results), status.HTTP_200_OK)
+        #results = Customer.all()
+        #return jsonify([customer.serialize() for customer in results]), HTTP_200_OK
     elif 'username' in request.args:
         username = request.args['username']
         customer = Customer.find_by_username(username)
@@ -128,33 +99,68 @@ def list_customers():
 ######################################################################
 # RETRIEVE A CUSTOMER By ID
 ######################################################################
-@app.route('/customers/<int:id>', methods=['GET'])
-def get_customers(id):
+@app.route('/customers/<int:customer_id>', methods=['GET'])
+def get_customers(customer_id):
     """ Retrieves a Customer with a specific id """
-    customer = Customer.find(id)
-    if customer:
-        message = customer.serialize()
-        return_code = HTTP_200_OK
-    else:
-        message = {'error' : 'Customer with id: %s was not found' % str(id)}
-        return_code = HTTP_404_NOT_FOUND
+#    customer = Customer.find(id)
+#    if customer:
+#        message = customer.serialize()
+#        return_code = HTTP_200_OK
+#    else:
+#        message = {'error' : 'Customer with id: %s was not found' % str(id)}
+#        return_code = HTTP_404_NOT_FOUND
+#
+#    return jsonify(message), return_code
 
-    return jsonify(message), return_code
+    customer = Customer.find(customer_id)
+    if not customer:
+        raise NotFound("Customer with id '{}' was not found.".format(customer_id))
+    return make_response(jsonify(customer.serialize()), status.HTTP_200_OK)
+
 
 ######################################################################
 # ADD A NEW CUSTOMER
 ######################################################################
 @app.route('/customers', methods=['POST'])
 def create_customers():
-    """ Creates a Customer in the database from the posted database """
-    payload = request.get_json()
+#    """ Creates a Customer in the database from the posted database """
+#    payload = request.get_json()
+#    customer = Customer()
+#    customer.deserialize(payload)
+#    customer.save()
+#    message = customer.serialize()
+#    response = make_response(jsonify(message), HTTP_201_CREATED)
+#    response.headers['Location'] = url_for('get_customers', id=customer.id, _external=True)
+#    return response
+    """
+    Creates a Customer
+    This endpoint will create a Customer based the data in the body that is posted
+    """
+    data = {}
+    # Check for form submission data
+    if request.headers.get('Content-Type') == 'application/x-www-form-urlencoded':
+        app.logger.info('Getting data from form submit')
+        data = {
+            'username': request.form['username'],
+            'password': request.form['password'],
+            'firstname': request.form['firstname'],
+            'lastname': request.form['lastname'],
+            'address': request.form['address'],
+            'phone': request.form['phone'],
+            'email': request.form['email']
+        }
+    else:
+        app.logger.info('Getting data from API call')
+        data = request.get_json()
+    app.logger.info(data)
     customer = Customer()
-    customer.deserialize(payload)
+    customer.deserialize(data)
     customer.save()
     message = customer.serialize()
-    response = make_response(jsonify(message), HTTP_201_CREATED)
-    response.headers['Location'] = url_for('get_customers', id=customer.id, _external=True)
-    return response
+    location_url = url_for('get_customers', customer_id=customer.id, _external=True)
+    return make_response(jsonify(message), status.HTTP_201_CREATED,
+                         {'Location': location_url})
+
 
 ######################################################################
 # UPDATE A CUSTOMER
@@ -257,9 +263,9 @@ def data_load(payload):
         payload['lastname'],
         payload['address'],
         payload['phone'],
-        payload['email'],
-        payload['status'],
-        payload['promo'])
+        payload['email'])#,
+        #payload['status'],
+        #payload['promo'])
     customer.save()
 
 def data_reset():
@@ -286,14 +292,3 @@ def initialize_logging(log_level=logging.INFO):
         app.logger.setLevel(log_level)
         app.logger.info('Logging handler established')
 
-
-######################################################################
-#   M A I N
-######################################################################
-if __name__ == "__main__":
-    print "*********************************"
-    print " C U S T O M E R  S E R V I C E "
-    print "*********************************"
-    initialize_logging()
-    init_db()
-    app.run(host='0.0.0.0', port=int(PORT), debug=DEBUG)

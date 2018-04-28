@@ -13,8 +13,16 @@ $(function () {
         $("#customer_address").val(res.customer_address);
         $("#customer_phone").val(res.customer_phone);
         $("#customer_email").val(res.customer_email);
-        $("#customer_active").val(res.customer_active);
-        $("#customer_promo").val(res.customer_promo);
+        if (res.active == true) {
+            $("#customer_active").val("true");
+        } else {
+            $("#customer_active").val("false");
+        }
+        if (res.promo == true) {
+            $("#customer_promo").val("true");
+        } else {
+            $("#customer_promo").val("false");
+        }
     }
 
     /// Clears all form fields
@@ -77,7 +85,7 @@ $(function () {
     // ****************************************
 
     $("#search-btn").click(function () {
-
+/*
         var username = $("#customer_username").val();
         var password = $("#customer_password").val();
         var firstname = $("#customer_firstname").val();
@@ -85,13 +93,13 @@ $(function () {
         var address = $("#customer_address").val();
         var phone = $("$customer_phone").val();
         var email = $("$customer_email").val();
-        var active = $("#customer_active").val();
-        var promo = $("#customer_promo").val();
+//        var active = $("#customer_active").val() == "true";
+//        var promo = $("#customer_promo").val() == "true";
 
         var queryString = ""
 
         if (username) {
-            queryString += 'username=' + name
+            queryString += 'username=' + username
         }
         if (password) {
             if (queryString.length > 0) {
@@ -135,6 +143,7 @@ $(function () {
                 queryString += 'email=' + email
             }
         }
+
         if (active) {
             if (queryString.length > 0) {
                 queryString += '&active=' + active
@@ -150,10 +159,11 @@ $(function () {
                 queryString += 'promo=' + promo
             }
         }
-
+*/
         var ajax = $.ajax({
             type: "GET",
-            url: "/customers?" + queryString,
+            //url: "/customers?" + queryString,
+            url: "/customers",
             contentType:"application/json",
             data: ''
         })
@@ -177,7 +187,8 @@ $(function () {
             for(var i = 0; i < res.length; i++) {
                 customer = res[i];
                 var row = "<tr><td>"+customer.id+"</td><td>"+customer.username+"</td><td>"+customer.password+"</td><td>"+customer.firstname+"</td><td>"+customer.lastname+"</td><td>"+customer.address+"</td><td>"+customer.phone+"</td><td>"+customer.email+"</td><td>"+customer.active+"</td><td>"+customer.promo+"</td></tr>";
-                $("#search_results").append(row);
+//                 var row = "<tr><td>"+customer.id+"</td><td>"+customer.username+"</td><td>"+customer.firstname+"</td><td>"+customer.lastname+"</td></tr>";
+                 $("#search_results").append(row);
             }
 
             $("#search_results").append('</table>');

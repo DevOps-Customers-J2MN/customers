@@ -5,10 +5,10 @@ Feature: The customer service back-end
 
 Background:
     Given the following customers
-        | id | username       | password | firstname | lastname | address         | phone      | email          | status | promo |
-        |  1 | msa503         | 503msa   | Meenakshi | Arumugam | Jersey City, NJ | 2016604601 | msa503@nyu.edu | 1      | 1     |
-        |  2 | nuzz           | nuzzbash | Nusrath   | Basheer  | New York, NY    | 201301401  | nuzz@nyu.edu   | 0      | 0     |
-        |  3 | jahn           | kaly     | Jahnavi   | Kalyani  | Jersey City, NJ | 201501601  | jk@nyu.edu     | 1      | 0     |
+        | id | username       | password | firstname | lastname | address         | phone      | email          | active    | promo    |
+        |  1 | msa503         | 503msa   | Meenakshi | Arumugam | Jersey City, NJ | 2016604601 | msa503@nyu.edu | True      | True     |
+        |  2 | nuzz           | nuzzbash | Nusrath   | Basheer  | New York, NY    | 2013014018 | nuzz@nyu.edu   | False     | True     |
+        |  3 | jahn           | jk56     | Jahnavi   | Kalyani  | Jersey City, NJ | 2015016019 | jk@nyu.edu     | True      | False    |
 
 Scenario: The server is running
     When I visit the "Home Page"
@@ -31,3 +31,19 @@ Scenario: Create a Customer
     And I set the "Email" to "jy2296@nyu.edu"
     And I press the "Create" button
     Then I should see the message "Success"
+
+Scenario: Update a Customer
+    When I visit the "Home Page"
+    And I set the "Id" to "3"
+    And I press the "Retrieve" button
+    Then I should see "Kalyani" in the "lastname" field
+    When I change "lastname" to "Dravid"
+    And I press the "Update" button
+    Then I should see the message "Success"
+    When I set the "Id" to "3"
+    And I press the "Retrieve" button
+    Then I should see "Dravid" in the "lastname" field
+    When I press the "Clear" button
+    And I press the "Search" button
+    Then I should see "Dravid" in the results
+    Then I should not see "Kalyani" in the results

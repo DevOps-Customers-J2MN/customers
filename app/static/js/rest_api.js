@@ -28,10 +28,6 @@ $(function () {
 
     // Clears all form fields
     function clear_form_data() {
-        $("#pet_name").val("");
-        $("#pet_category").val("");
-        $("#pet_available").val("");
-
         $("#inputID").val("");
         $("#inputUsername").val("");
         $("#inputPassword").val("");

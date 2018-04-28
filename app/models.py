@@ -28,9 +28,9 @@ import pickle
 from redis import Redis
 from redis.exceptions import ConnectionError
 
-class DataValidationError(Exception):
-    """ Custom Exception with data validation fails """
-    pass
+#class DataValidationError(Exception):
+#    """ Custom Exception with data validation fails """
+#    pass
 
 class Customer(object):
     """ Customer interface to database """
@@ -38,7 +38,7 @@ class Customer(object):
     logger = logging.getLogger(__name__)
     redis = None
 
-    def __init__(self, id=0, username=None, password=None, firstname=None, lastname=None, address=None, phone=None, email=None, status=None, promo=None):
+    def __init__(self, id=0, username=None, password=None, firstname=None, lastname=None, address=None, phone=None, email=None):
         """ Constructor """
         self.id = int(id)
         self.username = username
@@ -48,8 +48,8 @@ class Customer(object):
         self.address = address
         self.phone = phone
         self.email = email
-        self.status = status
-        self.promo = promo
+#        self.status = status
+#        self.promo = promo
 
     def __repr__(self):
         return '<Customer %r>' % (self.username)
@@ -66,10 +66,10 @@ class Customer(object):
             raise DataValidationError('lastname is not set')
         if self.email is None:
             raise DataValidationError('email is not set')
-        if self.status is None:
-            raise DataValidationError('status is not set')
-        if self.promo is None:
-            raise DataValidationError('promo is not set')
+#        if self.status is None:
+#            raise DataValidationError('status is not set')
+#        if self.promo is None:
+#            raise DataValidationError('promo is not set')
         if self.id == 0:
             self.id = Customer.__next_index()
         Customer.redis.set(self.id, pickle.dumps(self.serialize()))
@@ -88,9 +88,9 @@ class Customer(object):
             "lastname": self.lastname,
             "address": self.address,
             "phone": self.phone,
-            "email": self.email,
-            "status": self.status,
-            "promo": self.promo
+            "email": self.email
+#            "status": self.status,
+#            "promo": self.promo
         }
 
     def deserialize(self, data):
@@ -105,8 +105,8 @@ class Customer(object):
             self.address = data['address']
             self.phone = data['phone']
             self.email = data['email']
-            self.status = data['status']
-            self.promo = data['promo']
+#            self.status = data['status']
+#            self.promo = data['promo']
         except KeyError as error:
             raise DataValidationError('Invalid customer: missing ' + error.args[0])
         except TypeError as error:
@@ -200,25 +200,25 @@ class Customer(object):
         """
         return Customer.__find_by('email', email)
 
-    @staticmethod
-    def find_by_status(status):
-        """
-        Returns all of Customers by their status
+ #   @staticmethod
+ #   def find_by_status(status):
+ #       """
+ #       Returns all of Customers by their status
 
-        Args:
-            status (int): the status of the Customers you want to match
-        """
-        return Customer.__find_by('status', status)
+ #       Args:
+ #           status (int): the status of the Customers you want to match
+ #       """
+ #       return Customer.__find_by('status', status)
 
-    @staticmethod
-    def find_by_promo(promo):
-        """
-        Returns all of Customers by their promo
+  #  @staticmethod
+  #  def find_by_promo(promo):
+ #       """
+ #       Returns all of Customers by their promo
 
-        Args:
-            promo (int): the status of the Customers you want to match
-        """
-        return Customer.__find_by('promo', promo)
+ #      Args:
+ #           promo (int): the status of the Customers you want to match
+ #       """
+ #       return Customer.__find_by('promo', promo)
 
 
 ######################################################################

@@ -1,142 +1,154 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Customer Demo RESTful Service</title>
+    <title>Customer RESTful Service</title>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="static/css/blue_bootstrap.min.css">
+    <link rel="stylesheet" href="static/css/flatly_bootstrap.min.css" media="screen">
+    <link rel="stylesheet" href="static/css/custom.min.css" media="screen">
     <script type="text/javascript" src = "static/js/jquery-3.1.1.min.js"></script>
     <script type="text/javascript" src="static/js/rest_api.js"></script>
   </head>
   <body>
+
+    <!-- Header -->
+    <div class="navbar navbar-expand-lg fixed-top navbar-dark bg-primary">
+      <div class="container">
+        <a href="#" class="navbar-brand" style="color:#ffffff;">Customers</a>
+      </div>
+    </div>
+    <!-- End Header -->
+
+    <!-- Start Container -->
     <div class="container">
-        <div class="page-header">
-            <h1>Customer Demo REST API Service</h1>
-        </div>
+      <div class="page-header" id="banner">
+        <h3>REST API Service</h3>
+      </div>
 
-        <!-- Flash Message -->
-        <div class="table-responsive">
-          <table class="table">
-            <tr><td>Status:</td><td><span id="flash_message"></span></td></tr>
+      <div class="alert alert-dismissible alert-success">
+        <h4 class="alert-heading">Success!</h4>
+        <p class="mb-0">Status:</p>
+      </div>
+
+      <div class="alert alert-dismissible alert-warning">
+        <h4 class="alert-heading">Warning!</h4>
+        <p class="mb-0">Status:</p>
+      </div>
+
+      <div class="alert alert-dismissible alert-danger">
+        <h4 class="alert-heading">Error!</h4>
+        <p class="mb-0">Status:</p>
+      </div>
+
+      <!-- Flash Message -->
+      <!-- <div class="table-responsive">
+        <table class="table">
+          <tr><td>Status:</td><td><span id="flash_message"></span></td></tr>
           </table>
-        </div>
+        </div> -->
 
-        <div class="col-md-12" id="form_data">
-          Create, Retrieve, Update, and Delete a Customer:
-          <div class="well">
-            <div class="form-horizontal">
-              <div class="form-group">
-                <label class="control-label col-sm-2" for="customer_id">Customer ID:</label>
-                <div class="col-sm-6">
-                  <input type="text" class="form-control" id="customer_id" placeholder="Enter ID of Customer">
-                </div>
-                <div class="col-sm-4">
+      <div class="row">
+          <div class="col-lg-4" id="form_data">
+            Create, Retrieve, Update, and Delete a Customer:
+            <div class="well">
+              <div>
+                <fieldset>
+                  <div class="form-group">
+                    <label class="col-form-label" for="inputID">Customer ID</label>
+                    <input type="text" class="form-control" id="inputID" placeholder="Enter ID">
+                  </div>
                   <button type="submit" class="btn btn-primary" id="retrieve-btn">Retrieve</button>
                   <button type="submit" class="btn btn-danger" id="delete-btn">Delete</button>
-                </div>
+                </fieldset>
               </div>
-            </div> <!-- form div -->
-
-            <div class="form-horizontal">
-              <div class="form-group">
-                <label class="control-label col-sm-2" for="customer_username">UserName:</label>
-                <div class="col-sm-10">
-                  <input type="text" class="form-control" id="customer_username" placeholder="Enter Username for Customer">
-                </div>
-              </div>
-              <div class="form-group">
-                <label class="control-label col-sm-2" for="customer_password">Password:</label>
-                <div class="col-sm-10">
-                  <input type="text" class="form-control" id="customer_password" placeholder="Enter Password for Customer">
-                </div>
-              </div>
-              <div class="form-group">
-                <label class="control-label col-sm-2" for="customer_firstname">First Name:</label>
-                <div class="col-sm-10">
-                  <input type="text" class="form-control" id="customer_firstname" placeholder="Enter First Name for Customer">
-                </div>
-              </div>
-              <div class="form-group">
-                <label class="control-label col-sm-2" for="customer_lastname">Last Name:</label>
-                <div class="col-sm-10">
-                  <input type="text" class="form-control" id="customer_lastname" placeholder="Enter Last Name for Customer">
-                </div>
-              </div>              
-              <div class="form-group">
-                <label class="control-label col-sm-2" for="customer_address">Address:</label>
-                <div class="col-sm-10">
-                  <input type="text" class="form-control" id="customer_address" placeholder="Enter Address for Customer">
-                </div>
-              </div>
-              <div class="form-group">
-                <label class="control-label col-sm-2" for="customer_phone">Phone Number:</label>
-                <div class="col-sm-10">
-                  <input type="text" class="form-control" id="customer_phone" placeholder="Enter Phone for Customer">
-                </div>
-              </div>
-              <div class="form-group">
-                <label class="control-label col-sm-2" for="customer_email">Email:</label>
-                <div class="col-sm-10">
-                  <input type="text" class="form-control" id="customer_email" placeholder="Enter Email for Customer">
-                </div>
-              </div>
-              <div class="form-group">
-                <label class="control-label col-sm-2" for="customer_active">Active:</label>
-                <div class="col-sm-10">
-                  <select class="form-control" id="customer_active">
-                      <option value="false">False</option>
-                      <option value="true" selected>True</option>
-                  </select>
-                </div>
-              </div>
-              <div class="form-group">
-                <label class="control-label col-sm-2" for="customer_promo">Promo:</label>
-                <div class="col-sm-10">
-                  <select class="form-control" id="customer_promo">
-                      <option value="false" selected>False</option>
-                      <option value="true">True</option>
-                  </select>
-                </div>
-              </div>
-              <div class="form-group">
-                <div class="col-sm-offset-2 col-sm-10">
+            </div>
+            
+            <div class="well">
+              <div>
+                <fieldset>
+                  <div class="form-group">
+                    <label class="col-form-label" for="inputUsername">Username</label>
+                    <input type="text" class="form-control" id="inputUsername" placeholder="Enter Username">
+                  </div>
+                  <div class="form-group">
+                    <label class="col-form-label" for="inputPassword">Password</label>
+                    <input type="text" class="form-control" id="inputPassword" placeholder="Enter Password">
+                  </div>
+                  <div class="form-group">
+                    <label class="col-form-label" for="inputEmail">Email</label>
+                    <input type="email" class="form-control" id="inputEmail" placeholder="Enter email">
+                  </div>
+                  <div class="form-group">
+                    <label class="col-form-label" for="inputFirstname">FirstName</label>
+                    <input type="text" class="form-control" id="inputFirstname" placeholder="Enter First Name">
+                  </div>
+                  <div class="form-group">
+                    <label class="col-form-label" for="inputLastname">Lastname</label>
+                    <input type="text" class="form-control" id="inputLastname" placeholder="Enter Last Name">
+                  </div>
+                  <div class="form-group">
+                    <label class="col-form-label" for="inputPhone">Phone Number</label>
+                    <input type="text" class="form-control" id="inputPhone" placeholder="Enter Phone Number">
+                  </div>
+                  <div class="form-group">
+                    <label class="col-form-label" for="inputAddress">Address</label>
+                    <textarea class="form-control" id="inputAddress" rows="3" placeholder="Enter Address"></textarea>
+                  </div>
+                  <div class="form-group">
+                    <label for="inputActive">Active</label>
+                    <select class="form-control" id="inputActive">
+                      <option value="true" selected>Yes</option>
+                      <option value="false">No</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="inputPromo">Subscribe</label>
+                    <select class="form-control" id="inputPromo">
+                      <option value="true">Yes</option>
+                      <option value="false" selected>No</option>
+                    </select>
+                  </div>
                   <button type="submit" class="btn btn-primary" id="search-btn">Search</button>
-                  <button type="submit" class="btn btn-primary" id="clear-btn">Clear</button>
+                  <button type="submit" class="btn btn-info" id="clear-btn">Clear</button>
                   <button type="submit" class="btn btn-success" id="create-btn">Create</button>
                   <button type="submit" class="btn btn-warning" id="update-btn">Update</button>
-                </div>
+                </fieldset>
               </div>
-          </div> <!-- form div -->
+            </div>
+          </div>
+        
+          <!-- Search Results -->
+          <div class="table-responsive col-lg-8" id="search_results">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th scope="col">ID</th>
+                  <th scope="col">UserName</th>
+                  <th scope="col">Email</th>
+                  <th scope="col">FirstName</th>
+                  <th scope="col">LastName</th>
+                  <th scope="col">PhoneNumber</th>
+                  <th scope="col">Address</th>
+                  <th scope="col">Active</th>
+                  <th scope="col">Promo</th>
+                </tr>
+              </thead>
+            </table>
+          </div>
+        
         </div>
+    </div>
+    <!-- End Container -->
 
-        <!-- Search Results -->
-        <div class="table-responsive col-md-12" id="search_results">
-          <table class="table-striped">
-            <thead>
-            <tr>
-                <th class="col-md-1">ID</th>
-                <th class="col-md-1">UserName</th>
-                <th class="col-md-1">Password</th>
-                <th class="col-md-1">FirstName</th>
-                <th class="col-md-1">LastName</th>
-                <th class="col-md-1">Address</th>
-                <th class="col-md-1">PhoneNumber</th>
-                <th class="col-md-1">Email</th>
-                <th class="col-md-1">Active</th>
-                <th class="col-md-1">Promo</th>
-            </tr>
-            </thead>
-          </table>
-        </div>
+    <!-- Footer -->
+    <div class="container">
+      <footer>
+        <br><br>
+        <p>&copy; NYU DevOps Company 2017</p>
+      </footer>
+    </div>
+    <!-- End Footer -->
 
-        <footer>
-          <br><br>
-          <p>&copy; NYU DevOps Company 2017</p>
-        </footer>
-        </div><!--/span-->
-     </div><!--/row-->
-
-  </div><!-- container -->
   </body>
 </html>

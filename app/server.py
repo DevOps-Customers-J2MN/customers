@@ -8,10 +8,10 @@ Paths:
 GET  / - Display a UI for Selenium testing
 GET  /customers - Retrieves a list of all Customers from the database
 GET  /customers/{id} - Retrieves a Customer with a given id number
-GET  /customers?username={string} - Retrieves a Customer with a given username
-GET  /customers?email={string} - Retrieves a Customer with a given email
-GET  /customers?promo={boolean} - Retrieves a list of Customers with given promotion status
-GET  /customers?active={boolean} - Retrieves a list of Customers with given status
+GET  /customers?username={username} - Retrieves a Customer with a given username
+GET  /customers?email={email} - Retrieves a Customer with a given email
+GET  /customers?promo={true/false} - Retrieves a list of Customers with given promotion status
+GET  /customers?active={true/false} - Retrieves a list of Customers with given status
 POST /customers - Creates a new Customer record in the datbase
 PUT  /customers/{id} - Updates a Customer record in the database
 PUT  /customers/{id}/subscribe - Subscribe a Customer with id

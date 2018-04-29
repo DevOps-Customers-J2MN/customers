@@ -26,19 +26,7 @@
         <h3>REST API Service</h3>
       </div>
 
-      <div class="alert alert-dismissible alert-success">
-        <h4 class="alert-heading">Success!</h4>
-        <p class="mb-0">Status:</p>
-      </div>
-
-      <div class="alert alert-dismissible alert-warning">
-        <h4 class="alert-heading">Warning!</h4>
-        <p class="mb-0">Status:</p>
-      </div>
-
-      <div class="alert alert-dismissible alert-danger">
-        <h4 class="alert-heading">Error!</h4>
-        <p class="mb-0">Status:</p>
+      <div id="flash_message">
       </div>
 
       <!-- Flash Message -->
@@ -49,7 +37,7 @@
         </div> -->
 
       <div class="row">
-          <div class="col-lg-4" id="form_data">
+          <div class="col-lg-4">
             Create, Retrieve, Update, and Delete a Customer:
             <div class="well">
               <div>
@@ -63,7 +51,9 @@
                 </fieldset>
               </div>
             </div>
-            
+          </div>
+
+          <div class="col-lg-8">
             <div class="well">
               <div>
                 <fieldset>
@@ -117,9 +107,9 @@
               </div>
             </div>
           </div>
-        
+
           <!-- Search Results -->
-          <div class="table-responsive col-lg-8" id="search_results">
+          <div class="table-responsive col-lg-12" id="search_results">
             <table class="table table-hover">
               <thead>
                 <tr>
@@ -136,7 +126,7 @@
               </thead>
             </table>
           </div>
-        
+
         </div>
     </div>
     <!-- End Container -->

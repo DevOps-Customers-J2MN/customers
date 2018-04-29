@@ -58,10 +58,14 @@ def index():
 @app.route('/customers', methods=['GET'])
 def list_customers():
     """ Retrieves a list of all customers from the database """
-    
+
     customers = []
     username = request.args.get('username')
     email = request.args.get('email')
+    firstname = request.args.get('firstname')
+    lastname = request.args.get('lastname')
+    phone = request.args.get('phone')
+    address = request.args.get('address')
     promos = request.args.get('promo')
     actives = request.args.get('active')
 

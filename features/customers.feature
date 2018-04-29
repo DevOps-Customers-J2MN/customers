@@ -22,6 +22,15 @@ Scenario: List all customers
     And I should see "nuzz" in the results
     And I should see "jahn" in the results
 
+Scenario: Search customers based on attribute
+    When I visit the "Home Page"
+    And I set the "Email" to "msa503@nyu.edu"
+    And I press the "Search" button
+    Then I should see "msa503" in the results
+    And I should not see "nuzz" in the results
+    And I should not see "jahn" in the results
+
+
 Scenario: Create a Customer
     When I visit the "Home Page"
     And I set the "Username" to "jfy"

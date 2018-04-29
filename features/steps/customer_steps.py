@@ -77,7 +77,10 @@ def step_impl(context, name):
 
 @when(u'I set the "{element_name}" to "{text_string}"')
 def step_impl(context, element_name, text_string):
-    element_id = 'input' + element_name.title()
+    if element_name.upper() == 'ID':
+        element_id = 'input' + element_name.upper()
+    else:
+        element_id = 'input' + element_name.title()
     element = context.driver.find_element_by_id(element_id)
     element.clear()
     element.send_keys(text_string)
@@ -94,7 +97,10 @@ def step_impl(context, message):
 
 @then(u'I should see "{text_string}" in the "{element_name}" field')
 def step_impl(context, text_string, element_name):
-    element_id = 'input' + element_name.title()
+    if element_name.upper() == 'ID':
+        element_id = 'input' + element_name.upper()
+    else:
+        element_id = 'input' + element_name.title()
     found = WebDriverWait(context.driver, WAIT_SECONDS).until(
         expected_conditions.text_to_be_present_in_element_value(
             (By.ID, element_id),
@@ -105,7 +111,10 @@ def step_impl(context, text_string, element_name):
 
 @when(u'I change "{element_name}" to "{text_string}"')
 def step_impl(context, element_name, text_string):
-    element_id = 'input' + element_name.title()
+    if element_name.upper() == 'ID':
+        element_id = 'input' + element_name.upper()
+    else:
+        element_id = 'input' + element_name.title()
     element = WebDriverWait(context.driver, WAIT_SECONDS).until(
         expected_conditions.presence_of_element_located((By.ID, element_id))
     )

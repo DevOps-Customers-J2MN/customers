@@ -32,18 +32,18 @@ Scenario: Create a Customer
     And I press the "Create" button
     Then I should see the message "Success"
 
-#Scenario: Update a Customer
-#    When I visit the "Home Page"
-#    And I set the "id" to "3"
-#    And I press the "Retrieve" button
-#    Then I should see "Kalyani" in the "lastname" field
-#    When I change "lastname" to "Dravid"
-#    And I press the "Update" button
-#    Then I should see the message "Success"
-#    When I set the "Id" to "3"
-#    And I press the "Retrieve" button
-#    Then I should see "Dravid" in the "lastname" field
-#    When I press the "Clear" button
-#    And I press the "Search" button
-#    Then I should see "Dravid" in the results
-#    Then I should not see "Kalyani" in the results
+Scenario: Update a Customer
+    When I visit the "Home Page"
+    And I set the "Id" to "3"
+    And I press the "Retrieve" button
+    Then I should see "Kalyani" in the "lastname" field
+    When I change "lastname" to "Dravid"
+    And I press the "Update" button
+    Then I should see the message "Success"
+    When I set the "Id" to "3"
+    And I press the "Retrieve" button
+    Then I should see "Dravid" in the "lastname" field
+    When I press the "Clear" button
+    And I press the "Search" button
+    Then I should see "Dravid" in the results
+    Then I should not see "Kalyani" in the results

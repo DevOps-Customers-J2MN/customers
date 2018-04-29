@@ -12,7 +12,7 @@ Background:
 
 Scenario: The server is running
     When I visit the "Home Page"
-    Then I should see "Customer Demo RESTful Service" in the title
+    Then I should see "Customer RESTful Service" in the title
     And I should not see "404 Not Found"
 
 Scenario: List all customers
@@ -22,28 +22,28 @@ Scenario: List all customers
     And I should see "nuzz" in the results
     And I should see "jahn" in the results
 
-#Scenario: Create a Customer
-#    When I visit the "Home Page"
-#    And I set the "Username" to "jfy"
-#    And I set the "Password" to "123456"
-#    And I set the "Firstname" to "jinfan"
-#    And I set the "Lastname" to "yang"
-#    And I set the "Email" to "jy2296@nyu.edu"
-#    And I press the "Create" button
-#    Then I should see the message "Success"
+Scenario: Create a Customer
+    When I visit the "Home Page"
+    And I set the "Username" to "jfy"
+    And I set the "Password" to "123456"
+    And I set the "Firstname" to "jinfan"
+    And I set the "Lastname" to "yang"
+    And I set the "Email" to "jy2296@nyu.edu"
+    And I press the "Create" button
+    Then I should see the message "Success"
 
-#Scenario: Update a Customer
-#    When I visit the "Home Page"
-#    And I set the "Id" to "3"
-#    And I press the "Retrieve" button
-#    Then I should see "Kalyani" in the "lastname" field
-#    When I change "lastname" to "Dravid"
-#    And I press the "Update" button
-#    Then I should see the message "Success"
-#    When I set the "Id" to "3"
-#    And I press the "Retrieve" button
-#    Then I should see "Dravid" in the "lastname" field
-#    When I press the "Clear" button
-#    And I press the "Search" button
-#    Then I should see "Dravid" in the results
-#    Then I should not see "Kalyani" in the results
+Scenario: Update a Customer
+    When I visit the "Home Page"
+    And I set the "Id" to "3"
+    And I press the "Retrieve" button
+    Then I should see "Kalyani" in the "lastname" field
+    When I change "lastname" to "Dravid"
+    And I press the "Update" button
+    Then I should see the message "Success"
+    When I set the "Id" to "3"
+    And I press the "Retrieve" button
+    Then I should see "Dravid" in the "lastname" field
+    When I press the "Clear" button
+    And I press the "Search" button
+    Then I should see "Dravid" in the results
+    Then I should not see "Kalyani" in the results

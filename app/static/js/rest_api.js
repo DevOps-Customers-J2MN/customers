@@ -40,6 +40,24 @@ $(function () {
         $("#inputPromo").val("");
     }
 
+    function success_message(message) {
+      $("#flash_message").empty();
+      var html = '<div class="alert alert-dismissible alert-success">'
+      html += '<h4 class="alert-heading">Success!</h4>'
+      html += '<p class="mb-0">'+ message +'</p>'
+      html += '</div>'
+      $("#flash_message").append(html);
+    }
+
+    function fail_message(message) {
+      $("#flash_message").empty();
+      var html = '<div class="alert alert-dismissible alert-warning">'
+      html += '<h4 class="alert-heading">Warning!</h4>'
+      html += '<p class="mb-0">'+ message +'</p>'
+      html += '</div>'
+      $("#flash_message").append(html);
+    }
+
     // ****************************************
     // Retrieve a Customers
     // ****************************************
@@ -55,12 +73,13 @@ $(function () {
 
         ajax.done(function(res){
             update_form_data(res)
-            window.alert("Success")
+            success_message("Retrieved a customer with given ID.")
         });
 
         ajax.fail(function(res){
             clear_form_data()
-            window.alert("Failed")
+            window.alert("Retrieve Failed!")
+            fail_message(res.responseJSON.message)
         });
     });
 
@@ -80,11 +99,12 @@ $(function () {
 
        ajax.done(function(res){
            clear_form_data()
-           window.alert("Success")
+           success_message("Deleted a customer with given ID.")
        });
 
        ajax.fail(function(res){
-           window.alert("Delete failed!")
+           window.alert("Delete Failed!")
+           fail_message(res.responseJSON.message)
        });
      });
 
@@ -164,7 +184,6 @@ $(function () {
         })
 
         ajax.done(function(res){
-            window.alert("Success");
             $("#search_results").empty();
             var table = '<table class="table table-hover">';
             var header = '<thead><tr>';
@@ -199,10 +218,12 @@ $(function () {
             table += body;
             table += '</table>';
             $("#search_results").append(table);
+            success_message("Searched for customers with given attributes.")
         });
 
         ajax.fail(function(res){
-            window.alert("Search failed!");
+            window.alert("Search Failed!");
+            fail_message(res.responseJSON.message)
         });
     });
 
@@ -250,11 +271,12 @@ $(function () {
 
         ajax.done(function(res){
             update_form_data(res)
-            window.alert("Sucess!")
+            success_message("Created a customer.")
         });
 
         ajax.fail(function(res){
-            window.alert("Failed!")
+            window.alert("Create Failed!")
+            fail_message(res.responseJSON.message)
         });
     });
 
@@ -294,11 +316,12 @@ $(function () {
 
         ajax.done(function(res){
             update_form_data(res)
-            window.alert("Success")
+            success_message("Updated a customer.")
         });
 
         ajax.fail(function(res){
-            window.alert("Failed")
+            window.alert("Update Failed!")
+            fail_message(res.responseJSON.message)
         });
 
     });

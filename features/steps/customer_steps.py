@@ -42,7 +42,6 @@ def step_impl(context):
 def step_impl(context):
     """ Make a call to the base URL """
     context.driver.get(context.base_url)
-    #context.driver.save_screenshot('home_page.png')
 
 @then(u'I should see "{message}" in the title')
 def step_impl(context, message):
@@ -62,8 +61,6 @@ def step_impl(context, button):
 
 @then(u'I should see "{name}" in the results')
 def step_impl(context, name):
-    #element = context.driver.find_element_by_id('search_results')
-    #expect(element.text).to_contain(name)
     found = WebDriverWait(context.driver, WAIT_SECONDS).until(
         expected_conditions.text_to_be_present_in_element(
             (By.ID, 'search_results'),
@@ -80,15 +77,13 @@ def step_impl(context, name):
 
 @when(u'I set the "{element_name}" to "{text_string}"')
 def step_impl(context, element_name, text_string):
-    element_id = 'customer_' + element_name.lower()
+    element_id = 'input' + element_name.title()
     element = context.driver.find_element_by_id(element_id)
     element.clear()
     element.send_keys(text_string)
 
 @then(u'I should see the message "{message}"')
 def step_impl(context, message):
-    #element = context.driver.find_element_by_id('flash_message')
-    #expect(element.text).to_contain(message)
     found = WebDriverWait(context.driver, WAIT_SECONDS).until(
         expected_conditions.text_to_be_present_in_element(
             (By.ID, 'flash_message'),
@@ -99,21 +94,18 @@ def step_impl(context, message):
 
 @then(u'I should see "{text_string}" in the "{element_name}" field')
 def step_impl(context, text_string, element_name):
-    element_id = 'customer_' + element_name.lower()
-    #element = context.driver.find_element_by_id(element_id)
+    element_id = 'input' + element_name.title()
     found = WebDriverWait(context.driver, WAIT_SECONDS).until(
         expected_conditions.text_to_be_present_in_element_value(
             (By.ID, element_id),
             text_string
         )
     )
-    #expect(element.get_attribute('value')).to_equal(text_string)
     expect(found).to_be(True)
 
 @when(u'I change "{element_name}" to "{text_string}"')
 def step_impl(context, element_name, text_string):
-    element_id = 'customer_' + element_name.lower()
-    #element = context.driver.find_element_by_id(element_id)
+    element_id = 'input' + element_name.title()
     element = WebDriverWait(context.driver, WAIT_SECONDS).until(
         expected_conditions.presence_of_element_located((By.ID, element_id))
     )

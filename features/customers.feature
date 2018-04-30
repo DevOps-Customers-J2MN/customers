@@ -30,7 +30,6 @@ Scenario: Search customers based on attribute
     And I should not see "nuzz" in the results
     And I should not see "jahn" in the results
 
-
 Scenario: Create a Customer
     When I visit the "Home Page"
     And I set the "Username" to "jfy"
@@ -40,6 +39,15 @@ Scenario: Create a Customer
     And I set the "Email" to "jy2296@nyu.edu"
     And I press the "Create" button
     Then I should see the message "Success"
+
+Scenario: Retrieve a Customer
+    When I visit the "Home Page"
+    And I set the "Id" to "1"
+    And I press the "Retrieve" button
+    Then I should see the message "Success"
+    And I should see "msa503" in the "username" field
+    And I should see "Meenakshi" in the "firstname" field
+    And I should see "Jersey City, NJ" in the "address" field
 
 Scenario: Update a Customer
     When I visit the "Home Page"
@@ -72,3 +80,20 @@ Scenario: Delete a Customer
     And I press the "Retrieve" button
     Then I should see the message "Warning!"
 
+Scenario: Deactive a Customer
+    When I visit the "Home Page"
+    And I set the "Id" to "1"
+    And I press the "Deactive" button
+    Then I should see the message "Success"
+    And I should see "msa503" in the "username" field
+    And I should see "false" in the "active" field
+    And I should see "true" in the "promo" field
+
+Scenario: Subscribe a Customer
+    When I visit the "Home Page"
+    And I set the "Id" to "3"
+    And I press the "Promo" button
+    Then I should see the message "Success"
+    And I should see "jahn" in the "username" field
+    And I should see "true" in the "active" field
+    And I should see "true" in the "promo" field

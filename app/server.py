@@ -77,8 +77,6 @@ def index():
 ######################################################################
 @app.route('/customers', methods=['GET'])
 def list_customers():
-    """ Retrieves a list of all customers from the database """
-
     # yml files start with '---'
     # definitions can only define once, then you can use $ref to use it
     """
@@ -86,7 +84,7 @@ def list_customers():
     This endpoint will return all Customers unless a query parameter is specificed
     ---
     tags:
-      - Pets
+      - Customers
     description: The Customers endpoint allows you to query Customers
     parameters:
       - name: username
@@ -104,20 +102,55 @@ def list_customers():
         description: the lastname of Customer you are looking for
         required: false
         type: string
-
+      - name: email
+        in: query
+        description: the email of Customer you are looking for
+        required: false
+        type: string
+      - name: active
+        in: query
+        description: the active status of Customer you are looking for
+        required: false
+        type: string
+      - name: promo
+        in: query
+        description: the promotion status of Customer you are looking for
+        required: false
+        type: string
     definitions:
-      Pet:
+      Customer:
         type: object
         properties:
           id:
             type: integer
             description: unique id assigned internallt by service
-          name:
+          username:
             type: string
-            description: the pets's name
-          category:
+            description: the customer's username
+          password:
             type: string
-            description: the category of pet (e.g., dog, cat, fish, etc.)
+            description: the customer's password
+          firstname:
+            type: string
+            description: the customer's firstname
+          lastname:
+              type: string
+              description: the customer's lastname
+          address:
+            type: string
+            description: the customer's address
+          phone:
+            type: string
+            description: the customer's phone number
+          email:
+            type: string
+            description: the customer's email
+          active:
+            type: boolean
+            description: the active status of a customer
+          promo:
+            type: boolean
+            description: the promotion status of a customer
     responses:
       200:
         description: An array of Customers
@@ -186,7 +219,28 @@ def list_customers():
 ######################################################################
 @app.route('/customers/<int:id>', methods=['GET'])
 def get_customers(id):
-    """ Retrieves a Customer with a given id number """
+    """
+    Retrieve a single Customer
+    This endpoint will return a Customer based on it's id
+    ---
+    tags:
+      - Customers
+    produces:
+      - application/json
+    parameters:
+      - name: id
+        in: path
+        description: ID of customer to retrieve
+        type: integer
+        required: true
+    responses:
+      200:
+        description: Customer returned
+        schema:
+          $ref: '#/definitions/Customer'
+      404:
+        description: Customer not found
+    """
     customer = Customer.find(id)
     if not customer:
         raise NotFound("Customer with id '{}' was not found.".format(id))
@@ -199,7 +253,66 @@ def get_customers(id):
 ######################################################################
 @app.route('/customers', methods=['POST'])
 def create_customers():
-    """ Creates a Customer in the database """
+    """
+    Creates a Customer
+    This endpoint will create a Customer based the data in the body that is posted
+    ---
+    tags:
+      - Customers
+    consumes:
+      - application/json
+    produces:
+      - application/json
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          id: data
+          required:
+            - username
+            - password
+            - firstname
+            - lastname
+            - email
+            - active
+            - promo
+          properties:
+            username:
+              type: string
+              description: username for the Customer
+            password:
+              type: string
+              description: password for the Customer
+            firstname:
+              type: string
+              description: firstname for the Customer
+            lastname:
+              type: string
+              description: lastname for the Customer
+            address:
+              type: string
+              description: address for the Customer
+            phone:
+              type: string
+              description: phone number for the Customer
+            email:
+              type: string
+              description: email for the Customer
+            active:
+              type: boolean
+              description: active status for the Customer
+            promo:
+              type: boolean
+              description: promo status for the Customer
+    responses:
+      201:
+        description: Customer created
+        schema:
+          $ref: '#/definitions/Customer'
+      400:
+        description: Bad Request (the posted data was not valid)
+    """
     data = {}
     # Check for form submission data
     if request.headers.get('Content-Type') == 'application/x-www-form-urlencoded':
@@ -233,7 +346,70 @@ def create_customers():
 ######################################################################
 @app.route('/customers/<int:id>', methods=['PUT'])
 def update_customers(id):
-    """ Updates a Customer in the database from the posted database """
+    """
+    Update a Customer
+    This endpoint will update a Customer based the body that is posted
+    ---
+    tags:
+      - Customers
+    consumes:
+      - application/json
+    produces:
+      - application/json
+    parameters:
+      - name: id
+        in: path
+        description: ID of customer to retrieve
+        type: integer
+        required: true
+      - in: body
+        name: body
+        schema:
+          id: data
+          required:
+            - username
+            - password
+            - firstname
+            - lastname
+            - email
+            - active
+            - promo
+          properties:
+            username:
+              type: string
+              description: username for the Customer
+            password:
+              type: string
+              description: password for the Customer
+            firstname:
+              type: string
+              description: firstname for the Customer
+            lastname:
+              type: string
+              description: lastname for the Customer
+            address:
+              type: string
+              description: address for the Customer
+            phone:
+              type: string
+              description: phone number for the Customer
+            email:
+              type: string
+              description: email for the Customer
+            active:
+              type: boolean
+              description: active status for the Customer
+            promo:
+              type: boolean
+              description: promo status for the Customer
+    responses:
+      200:
+        description: Customer updated
+        schema:
+          $ref: '#/definitions/Customer'
+      400:
+        description: Bad Request (the posted data was not valid)
+    """
     check_content_type('application/json')
     customer = Customer.find(id)
     if not customer:
@@ -252,7 +428,28 @@ def update_customers(id):
 ######################################################################
 @app.route('/customers/<int:id>/subscribe', methods=['PUT'])
 def subscribe_customers(id):
-    """ Subscribe a Customer """
+    """
+    Subscribe a Customer
+    This endpoint will subscribe a Customer to promotion info based the body that is posted
+    ---
+    tags:
+      - Customers
+    produces:
+      - application/json
+    parameters:
+      - name: id
+        in: path
+        description: ID of customer to retrieve
+        type: integer
+        required: true
+    responses:
+      200:
+        description: Customer updated the promo status
+        schema:
+          $ref: '#/definitions/Customer'
+      404:
+        description: Pet not found
+    """
     customer = Customer.find(id)
     if not customer:
         abort(status.HTTP_404_NOT_FOUND, "Customer with id '{}' was not found.".format(id))
@@ -267,7 +464,28 @@ def subscribe_customers(id):
 ######################################################################
 @app.route('/customers/<int:id>/deactivate', methods=['PUT'])
 def deactivate_customers(id):
-    """ Deactivate a Customer """
+    """
+    Deactivate a Customer
+    This endpoint will deactivate a Customer based the body that is posted
+    ---
+    tags:
+      - Customers
+    produces:
+      - application/json
+    parameters:
+      - name: id
+        in: path
+        description: ID of customer to retrieve
+        type: integer
+        required: true
+    responses:
+      200:
+        description: Customer updated the active status
+        schema:
+          $ref: '#/definitions/Customer'
+      404:
+        description: Pet not found
+    """
     customer = Customer.find(id)
     if not customer:
         abort(status.HTTP_404_NOT_FOUND, "Customer with id '{}' was not found.".format(id))
@@ -282,7 +500,23 @@ def deactivate_customers(id):
 ######################################################################
 @app.route('/customers/<int:id>', methods=['DELETE'])
 def delete_customers(id):
-    """ Deletes a Customer in the database """
+    """
+    Delete a Customer
+    This endpoint will delete a Customer based the id specified in the path
+    ---
+    tags:
+      - Customers
+    description: Deletes a Customer from the database
+    parameters:
+      - name: id
+        in: path
+        description: ID of pet to delete
+        type: integer
+        required: true
+    responses:
+      204:
+        description: Customer deleted
+    """
     customer = Customer.find(id)
     if customer:
         customer.delete()

@@ -109,10 +109,59 @@ $(function () {
      });
 
 
+    // ****************************************
+    // Deactive a Customer
+    // ****************************************
+    $("#deactive-btn").click(function () {
+       var customer_id = $("#inputID").val();
+
+       var ajax = $.ajax({
+           type: "PUT",
+           url: "/customers/" + customer_id + "/deactivate",
+           contentType:"application/json",
+           data: '',
+       })
+
+       ajax.done(function(res){
+           update_form_data(res)
+           success_message("Deactive a customer with given ID.")
+       });
+
+       ajax.fail(function(res){
+           window.alert("Deactive Failed!")
+           fail_message(res.responseJSON.message)
+       });
+     });
+
+
      // ****************************************
-     // Search for a Customer
+     // Subscribe a Customer
      // ****************************************
-     $("#search-btn").click(function () {
+     $("#promo-btn").click(function () {
+        var customer_id = $("#inputID").val();
+
+        var ajax = $.ajax({
+            type: "PUT",
+            url: "/customers/" + customer_id + "/subscribe",
+            contentType:"application/json",
+            data: '',
+        })
+
+        ajax.done(function(res){
+            update_form_data(res)
+            success_message("Subscribe a customer to promotion info with given ID.")
+        });
+
+        ajax.fail(function(res){
+            window.alert("Subscribe Failed!")
+            fail_message(res.responseJSON.message)
+        });
+    });
+
+    // ****************************************
+    // Search for a Customer
+    // ****************************************
+    $("#search-btn").click(function () {
         var username = $("#inputUsername").val();
         var email = $("#inputEmail").val();
         var firstname = $("#inputFirstname").val();

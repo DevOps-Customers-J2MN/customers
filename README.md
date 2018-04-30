@@ -23,7 +23,9 @@ Then all you have to do is clone this repo and invoke vagrant:
     vagrant ssh
     cd /vagrant
 
-You can now run `python run.py` to start the server
+You can now start the server by
+
+    $ python run.py
 
 When you are done, you can exit and shut down the vm with:
 
@@ -36,7 +38,7 @@ If the VM is no longer needed you can remove it with:
 
 ## Running the Tests
 
-Run the tests using `nose`
+* Run the unit tests using `nose`
 
     $ nosetests
 
@@ -53,10 +55,24 @@ You can also manually run `nosetests` with `coverage` (but `setup.cfg` does this
 
     $ nosetests --with-coverage --cover-package=server
 
+* Run the Behavioral Driven Development tests using `Behave` and `Selenium`
+
+First, you need to run the server in the background
+
+    $ python run.py &
+
+Then you can run the BDD tests
+    
+    $ behave
+    
+After the BDD tests, we need to bring the server to the foreground to stop it since we started the server in the background with '&'
+
+    $ fg
+    $ <ctrl + c>
 
 ## What's featured in the project?
 
-    * server.py -- the main Service using Python Flask
-    * models.py -- the data model using Redis
+    * app/server.py -- the main Service using Python Flask
+    * app/models.py -- the data model using Redis
     * tests/test_server.py -- test cases against the service
     * tests/test_customers.py -- test cases against the Customer model

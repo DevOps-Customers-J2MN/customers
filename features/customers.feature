@@ -56,3 +56,19 @@ Scenario: Update a Customer
     And I press the "Search" button
     Then I should see "Dravid" in the results
     Then I should not see "Kalyani" in the results
+
+Scenario: Delete a Customer
+    When I visit the "Home Page"
+    And I set the "Id" to "100"
+    And I press the "Delete" button
+    Then I should see the message "Success"
+    When I set the "Id" to "2"
+    And I press the "Retrieve" button
+    Then I should see "Nusrath" in the "firstname" field
+    When I set the "Id" to "2"
+    And I press the "Delete" button
+    Then I should see the message "Success"
+    When I set the "Id" to "2"
+    And I press the "Retrieve" button
+    Then I should see the message "Warning!"
+

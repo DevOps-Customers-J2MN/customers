@@ -210,6 +210,26 @@ class Customer(object):
         return Customer.__find_by('email', email)
 
     @staticmethod
+    def find_by_firstname(firstname):
+        """
+        Returns a Customer with the given firstname
+
+        Args:
+            firstname (string): the firstname of the Customer you want to match
+        """
+        return Customer.__find_by('firstname', firstname)
+
+    @staticmethod
+    def find_by_lastname(lastname):
+        """
+        Returns a Customer with the given lastname
+
+        Args:
+            lastname (string): the lastname of the Customer you want to match
+        """
+        return Customer.__find_by('lastname', lastname)
+
+    @staticmethod
     def find_by_active(active):
         """
         Returns all of Customers by their status

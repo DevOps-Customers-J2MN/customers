@@ -3,6 +3,7 @@ Flask-API==0.6.9
 flake8
 redis>=2.10
 Cerberus==1.1
+flasgger==0.8.1
 
 # TDD
 pylint

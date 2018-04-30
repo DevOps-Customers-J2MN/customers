@@ -166,8 +166,6 @@ $(function () {
         var email = $("#inputEmail").val();
         var firstname = $("#inputFirstname").val();
         var lastname = $("#inputLastname").val();
-        var phone = $("#inputPhone").val();
-        var address = $("#inputAddress").val();
         var active = $("#inputActive").val() == "true";
         var promo = $("#inputPromo").val() == "true";
 
@@ -194,20 +192,6 @@ $(function () {
                 queryString += '&lastname=' + lastname
             } else {
                 queryString += 'lastname=' + lastname
-            }
-        }
-        if (phone) {
-            if (queryString.length > 0) {
-                queryString += '&phone=' + phone
-            } else {
-                queryString += 'phone=' + phone
-            }
-        }
-        if (address) {
-            if (queryString.length > 0) {
-                queryString += '&address=' + address
-            } else {
-                queryString += 'address=' + address
             }
         }
         if (active) {

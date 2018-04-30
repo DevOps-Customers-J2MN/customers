@@ -31,6 +31,26 @@ from . import app
 # then only after we have initialized the Flask app instance
 import error_handlers
 
+# Swagger
+from flasgger import Swagger
+
+# Configure Swagger before initilaizing it
+app.config['SWAGGER'] = {
+    "swagger_version": "2.0",
+    "specs": [
+        {
+            "version": "1.0.0",
+            "title": "DevOps Swagger Customer App",
+            "description": "This is a sample Customer server.",
+            "endpoint": 'v1_spec',
+            "route": '/v1/spec'
+        }
+    ]
+}
+
+# Initialize Swagger after configuring it
+Swagger(app)
+
 ######################################################################
 # GET HEALTH CHECK
 ######################################################################
@@ -59,13 +79,60 @@ def index():
 def list_customers():
     """ Retrieves a list of all customers from the database """
 
+    # yml files start with '---'
+    # definitions can only define once, then you can use $ref to use it
+    """
+    Retrieve a list of Customers
+    This endpoint will return all Customers unless a query parameter is specificed
+    ---
+    tags:
+      - Pets
+    description: The Customers endpoint allows you to query Customers
+    parameters:
+      - name: username
+        in: query
+        description: the username of Customer you are looking for
+        required: false
+        type: string
+      - name: firstname
+        in: query
+        description: the firstname of Customer you are looking for
+        required: false
+        type: string
+      - name: lastname
+        in: query
+        description: the lastname of Customer you are looking for
+        required: false
+        type: string
+
+    definitions:
+      Pet:
+        type: object
+        properties:
+          id:
+            type: integer
+            description: unique id assigned internallt by service
+          name:
+            type: string
+            description: the pets's name
+          category:
+            type: string
+            description: the category of pet (e.g., dog, cat, fish, etc.)
+    responses:
+      200:
+        description: An array of Customers
+        schema:
+          type: array
+          items:
+            schema:
+              $ref: '#/definitions/Pet'
+    """
+
     customers = []
     username = request.args.get('username')
     email = request.args.get('email')
     firstname = request.args.get('firstname')
     lastname = request.args.get('lastname')
-    phone = request.args.get('phone')
-    address = request.args.get('address')
     promos = request.args.get('promo')
     actives = request.args.get('active')
 
@@ -77,6 +144,14 @@ def list_customers():
         customers = Customer.find_by_email(email)
         if not customers:
             raise NotFound("Customer with email '{}' was not found.".format(email))
+    elif firstname:
+        customers = Customer.find_by_firstname(firstname)
+        if not customers:
+            raise NotFound("Customer with firstname '{}' was not found.".format(firstname))
+    elif lastname:
+        customers = Customer.find_by_lastname(lastname)
+        if not customers:
+            raise NotFound("Customer with lastname '{}' was not found.".format(lastname))
     elif promos:
         promos = promos.lower()
         if promos == 'true':

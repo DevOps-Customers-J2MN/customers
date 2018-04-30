@@ -257,6 +257,54 @@ class TestCustomers(unittest.TestCase):
         self.assertEqual(customers[0].active, True)
         self.assertEqual(customers[0].promo, False)
 
+    def test_find_by_firstname(self):
+        """ Find a Customer by firstname """
+        Customer(username='jf', password='12345',
+                 firstname='jinfan', lastname='yang',
+                 address='nyu', phone='123-456-7890',
+                 email='jy2296@nyu.edu', active=True, promo=False).save()
+
+        Customer(username='ms', password='11111',
+                 firstname='mary', lastname='sue',
+                 address='nyu', phone='123-456-7890',
+                 email='marysue@gmail.com', active=True, promo=True).save()
+
+        customers = Customer.find_by_firstname("jinfan")
+
+        self.assertEqual(customers[0].username, "jf")
+        self.assertEqual(customers[0].password, "12345")
+        self.assertEqual(customers[0].firstname, "jinfan")
+        self.assertEqual(customers[0].lastname, "yang")
+        self.assertEqual(customers[0].address, "nyu")
+        self.assertEqual(customers[0].phone, "123-456-7890")
+        self.assertEqual(customers[0].email, "jy2296@nyu.edu")
+        self.assertEqual(customers[0].active, True)
+        self.assertEqual(customers[0].promo, False)
+
+    def test_find_by_lastname(self):
+        """ Find a Customer by lastname """
+        Customer(username='jf', password='12345',
+                 firstname='jinfan', lastname='yang',
+                 address='nyu', phone='123-456-7890',
+                 email='jy2296@nyu.edu', active=True, promo=False).save()
+
+        Customer(username='ms', password='11111',
+                 firstname='mary', lastname='sue',
+                 address='nyu', phone='123-456-7890',
+                 email='marysue@gmail.com', active=True, promo=True).save()
+
+        customers = Customer.find_by_lastname("yang")
+
+        self.assertEqual(customers[0].username, "jf")
+        self.assertEqual(customers[0].password, "12345")
+        self.assertEqual(customers[0].firstname, "jinfan")
+        self.assertEqual(customers[0].lastname, "yang")
+        self.assertEqual(customers[0].address, "nyu")
+        self.assertEqual(customers[0].phone, "123-456-7890")
+        self.assertEqual(customers[0].email, "jy2296@nyu.edu")
+        self.assertEqual(customers[0].active, True)
+        self.assertEqual(customers[0].promo, False)
+
     def test_find_by_email(self):
         """ Find a Customer by email """
         Customer(username='jf', password='12345',

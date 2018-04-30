@@ -33,6 +33,8 @@ class TestCustomerServer(unittest.TestCase):
             "address":"Jersey City", "phone":"2016604601","email":"msa503@nyu.edu", "active":True, "promo":True})
         server.data_load({"username":"jf", "password":"12345", "firstname":"jinfan", "lastname":"yang",
             "address":"nyu", "phone":"123-456-7890","email":"jy2296@nyu.edu", "active":True, "promo":False})
+        server.data_load({"username":"jfy2", "password":"1234567", "firstname":"jinfan", "lastname":"yang",
+            "address":"eastvillage", "phone":"123-456-7890","email":"jfy@nyu.edu", "active":True, "promo":False})
 
 
     def test_healthcheck(self):
@@ -52,7 +54,7 @@ class TestCustomerServer(unittest.TestCase):
         resp = self.app.get('/customers')
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = json.loads(resp.data)
-        self.assertEqual(len(data), 2)
+        self.assertEqual(len(data), 3)
 
     def test_get_customer_by_username(self):
         """ Get customer by username """
@@ -62,6 +64,26 @@ class TestCustomerServer(unittest.TestCase):
         self.assertEqual(data[0]['username'], customer.username)
         self.assertEqual(data[0]['id'], customer.id)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+    def test_get_customer_by_firstname(self):
+        """ Get customer by firstname """
+        customer = Customer.find_by_firstname('jinfan')[0]
+        resp = self.app.get('/customers?firstname=jinfan')
+        data = json.loads(resp.data)
+        self.assertEqual(data[0]['username'], customer.username)
+        self.assertEqual(data[0]['id'], customer.id)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(data), 2)
+
+    def test_get_customer_by_lastname(self):
+        """ Get customer by lastname """
+        customer = Customer.find_by_lastname('yang')[0]
+        resp = self.app.get('/customers?lastname=yang')
+        data = json.loads(resp.data)
+        self.assertEqual(data[0]['username'], customer.username)
+        self.assertEqual(data[0]['id'], customer.id)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(data), 2)
 
     def test_get_customer_by_email(self):
         """ Get customer by email """
@@ -87,7 +109,7 @@ class TestCustomerServer(unittest.TestCase):
         resp = self.app.get('/customers?promo=false')
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = json.loads(resp.data)
-        self.assertTrue(len(data) == 1)
+        self.assertTrue(len(data) == 2)
 
     def test_get_customer_active_list(self):
         """ Get a list of Customers with given active status TRUE """
@@ -95,7 +117,7 @@ class TestCustomerServer(unittest.TestCase):
         resp = self.app.get('/customers?active=true')
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = json.loads(resp.data)
-        self.assertTrue(len(data) == 2)
+        self.assertTrue(len(data) == 3)
 
     def test_get_customer_active_list_2(self):
         """ Get a list of Customers with given active status FALSE """

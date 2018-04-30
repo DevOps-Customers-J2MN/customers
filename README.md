@@ -38,7 +38,7 @@ If the VM is no longer needed you can remove it with:
 
 ## Running the Tests
 
-* Run the unit tests using `nose`
+#### Run the unit tests using `nose`
 
     $ nosetests
 
@@ -55,7 +55,7 @@ You can also manually run `nosetests` with `coverage` (but `setup.cfg` does this
 
     $ nosetests --with-coverage --cover-package=server
 
-* Run the Behavioral Driven Development tests using `Behave` and `Selenium`
+#### Run the Behavioral Driven Development tests using `Behave` and `Selenium`
 
 First, you need to run the server in the background
 

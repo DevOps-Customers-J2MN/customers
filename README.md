@@ -3,6 +3,8 @@
 [![Build Status](https://travis-ci.org/DevOps-Customers-J2MN/customers.svg?branch=master)](https://travis-ci.org/DevOps-Customers-J2MN/customers)
 [![codecov](https://codecov.io/gh/DevOps-Customers-J2MN/customers/branch/master/graph/badge.svg)](https://codecov.io/gh/DevOps-Customers-J2MN/customers)
 
+Production URL : https://nyu-customer-service-s18.mybluemix.net/
+
 This is the repository for squads "/customers"
 
 The base service code is contained in `server.py` while the business logic for manipulating Customers is in the `models.py` file. As such, we have two tests suites: one for the model (`test_customers.py`) and one for the serveice itself (`test_server.py`)
